@@ -1,238 +1,58 @@
-# More than a Hack 2027 — Phase 1: Ball Possession
+# More than a Hack 2027 — Ball Possession
 
-**Organised by [Metrica Sports](https://metrica-sports.com), [FC Barcelona](https://www.fcbarcelona.com)
-and the [Mobile World Capital Barcelona](https://www.mwcbarcelona.com)**, at the Talent Arena in Barcelona.
+Projeto de análise de posse de bola em futebol, desenvolvido a partir do desafio
+**More than a Hack 2027**, organizado por [Metrica Sports](https://metrica-sports.com),
+[FC Barcelona](https://www.fcbarcelona.com) e
+[Mobile World Capital Barcelona](https://www.mwcbarcelona.com).
 
-## Organização do repositório
+O objetivo é identificar, a cada frame de uma partida profissional, se a posse
+pertence ao time da casa, ao visitante ou se a bola está fora de jogo. O desafio
+combina visão computacional, dados de tracking e análise temporal para reconstruir
+sequências de posse mesmo quando as observações da bola estão ausentes ou inconsistentes.
 
-Comece pelo [guia do projeto em português](docs/GUIA-PROJETO.md), que reúne a explicação das
-pastas, dos arquivos e da documentação original em um único lugar.
+## O problema
 
-[`src/`](src/README.md) fica reservada para código futuro, com configurações em
-[`configs/`](configs/README.md). Os exemplos de referência continuam em [`starter/`](starter/README.md);
-os tutoriais estão em [`notebooks/`](notebooks/README.md). A avaliação oficial permanece em
-`evaluation/`, sem mudanças no código ou nos CSVs originais.
+Os dados disponibilizados pela organização incluem vídeos de câmera tática e de
+transmissão, tracking automático de jogadores e bola, eventos de jogo e homografias.
+A saída é um CSV com uma classificação por frame:
 
-- [Mapa da documentação](docs/README.md)
-- [Pesquisa inicial, sem divisão de trabalho](docs/PESQUISA-INICIAL.md)
-- [Como preparar os dados no seu computador](docs/DADOS-LOCAIS.md)
-- [Organização, comandos e verificações](docs/ORGANIZACAO.md)
-
-**Regras:** os documentos originais abaixo refletem o checkout recebido. Consulte a
-[versão oficial atual](https://github.com/metrica-sports/more-than-a-hack-2027/blob/main/RULES.md)
-antes de definir treinamento ou validação. Os cinco minutos públicos servem para conferir o
-pipeline, não para ajustar modelos.
-
-### Ambiente e primeira execução
-
-Execute os comandos a partir da raiz do repositório:
-
-```bash
-python -m venv .venv
-source .venv/bin/activate
-python -m pip install -r requirements-lock.txt
-python starter/baseline.py --out outputs/submissions/baselines
-python evaluation/validate_submission.py outputs/submissions/baselines/baseline_smooth50.csv
-python evaluation/run_evaluation.py --results outputs/submissions/baselines --out outputs/evaluation
-```
-
-`requirements-lock.txt` registra o ambiente básico verificado na reorganização (Python 3.13).
-`requirements.txt` mantém a lista mínima original. Para usar os notebooks, instale também
-`requirements-starter.txt`. Dados, ZIPs, ambiente e resultados locais ficam fora do Git.
-
-Cada participante deve obter seus próprios arquivos pelo acesso autorizado da organização e
-seguir [a preparação dos dados locais](docs/DADOS-LOCAIS.md). As pastas `data/tactical/` e
-`data/broadcast/` levam somente guias no clone. Confira os destinos com
-`python scripts/verificar_dados.py`; não há download automático.
-
-A football data challenge on real professional match data, open to analysts, data scientists and
-engineers. You are given one complete LaLiga match — two camera feeds, automatic tracking of every
-player and the ball, automatic tactical tagging, and the camera-to-pitch geometry — and one
-question to answer with it.
-
----
-
-## The task
-
-**For every frame of the match, say who has the ball.**
-
-```
-frame,label
-11185,A        away in possession, ball alive
-11186,A
-...
-18240,D        dead ball
-...
-18684,H        home in possession, ball alive
-```
-
-That is the whole task. One CSV, one row per video frame, 199,319 rows. It is scored automatically
-against a private frame-by-frame ground truth, so there is a number at the end and no argument
-about it — no jury, and no presentation to argue from.
-
-The tracking is automatic and uncorrected: it has gaps and identity
-switches, and the ball itself is invisible on 41% of the frames you are scored on.
-
----
-
-## The challenge in one screen
-
-| |                                                                                                                           |
-|---|---------------------------------------------------------------------------------------------------------------------------|
-| **Input** | one full match: tactical video, broadcast video, automatic tracking **with the ball** for both, Smart Tagging, homography |
-| **Output** | `frame,label` CSV, 199,319 rows, labels `H` / `A` / `D` / `X`                                                             |
-| **Ranked on** | `spellF1` — how many of the match's real possessions you recovered as whole possessions                                   |
-| **Also reported** | `macroF1` — the per-frame view, and the first tie-break                                                                   |
-| **Baseline to beat** | `spellF1` **0.2433**, in this repository                                                                                  |
-| **Ground truth you get** | the first **5 minutes** of play                                                                                           |
-| **Ground truth you are scored on** | the full match, **private**                                                                                               |
-
-It is deliberately **not** a tracking challenge. The tracking, tagging and homography are given to
-you so that nobody has to rebuild detection, re-identification and camera calibration before
-getting to the actual question. See [CHALLENGE.md](docs/CHALLENGE.md).
-
----
-
-## Try it right now
-
-The scorer, a 5-minute ground truth and four working baselines are in this repository. No
-enrolment, no download, no data:
-
-```bash
-pip install -r requirements.txt
-python evaluation/run_evaluation.py
-```
-
-Scored on the public 5 minutes, not on the full match -- which is why the order below is not the
-order of the floor quoted above:
-
-```
-scoreboard  gt/BAR-ATH_possession_gt_public.csv  199319 frames  7500 graded  21 gt segments
-ground truth has 17 possessions of mean 14.2 s  <- compare the poss and dur columns
-
-rank  submission                macroF1  spellF1   poss     dur  
-----  ------------------------  -------  -------  -----  ------  
-   1  baseline_smooth125         0.5812   0.4242     16    18.5  
-   2  baseline_smooth50          0.6207   0.3256     26    10.8  
-   3  baseline_smooth25          0.6200   0.2868     36     7.6  
-   4  baseline_raw               0.5972   0.0378    131     2.0  
-```
-
-Those four are **the same algorithm four times** — nearest tracked player to the ball, then a
-majority vote over a window. Only the window changes. `macroF1` barely moves; `spellF1` moves by a
-factor of eleven. That disagreement is the whole point of the metric, and
-[EVALUATION.md](docs/EVALUATION.md) explains it.
-
-Once you have the data, regenerate them yourself and go further:
-
-```bash
-python starter/baseline.py                              # rebuild the four baselines
-python evaluation/validate_submission.py <your>.csv     # before every submission
-```
-
-**Validate every file before you submit it.** `validate_submission.py` runs exactly the checks the
-official scorer runs, and a file that fails them is dropped from the board with a one-line reason.
-It takes two seconds and it is the single most common way a good entry scores nothing.
-
----
-
-## Getting the data
-
-The match assets are released to enrolled participants who have accepted the terms of use.
-
-1. Enrol: **[More than A Hack 2027](https://landing.mobileworldcapital.com/more-than-a-hack-2027)**
-2. Read and sign the terms and conditions in the registration form
-3. You receive a download link.
-4. Unpack it into `./data`, or point `MTAH_DATA_DIR` at wherever you put it.
-
-Full description of every asset and how the frames line up: **[DATA.md](docs/DATA.md)**.
-
----
-
-## Read these, in this order
-
-| | |
+| Rótulo | Significado |
 |---|---|
-| **[CHALLENGE.md](docs/CHALLENGE.md)** | the problem, the four labels, what counts as possession |
-| **[DATA.md](docs/DATA.md)** | every provided asset, its format, and the frame alignment |
-| **[EVALUATION.md](docs/EVALUATION.md)** | how you are scored, and why — read before optimising anything |
-| **[SUBMISSION.md](docs/SUBMISSION.md)** | the file contract, the three deliverables, how to submit |
-| **[RULES.md](docs/RULES.md)** | what you may and may not do |
-| **[FAQ.md](docs/FAQ.md)** | |
-| **[OVERVIEW.md](docs/OVERVIEW.md)** | the competition as a whole — context, why the 2027 format changed, the calendar |
+| `H` | Posse do time da casa |
+| `A` | Posse do time visitante |
+| `D` | Bola fora de jogo |
+| `X` | Estado desconhecido |
 
+A principal métrica é **spellF1**, que avalia a recuperação de sequências completas
+de posse. A **macroF1** complementa a avaliação com uma medida por frame. As definições
+e os critérios estão na [documentação de avaliação](docs/EVALUATION.md).
 
----
+## Estado do projeto
 
-## What is in this repository
+O repositório reúne a base oficial do desafio, os exemplos de referência e a
+estrutura para desenvolvimento e avaliação de soluções. A implementação própria
+ainda está em preparação; não há resultados próprios apresentados neste README.
 
-```
-games.py                    shared match constants, asset paths and frame alignment
-src/                        future implementation; architecture and roles not defined
-configs/                    experiment configuration conventions
-docs/                       challenge documentation, research and organization guide
-notebooks/                  the three original tutorials, with updated paths
-evaluation/
-  possession_metrics.py     the metric library — every number on the board is defined here
-  run_evaluation.py         the scorer. This exact file produces the official result
-  validate_submission.py    check a file before you send it
-  gt/                       the public 5-minute ground truth
-  results/                  the four baselines; put your submissions here
-starter/
-  baseline.py               the reference baseline, numpy only
-  load_atd.py               read the tracking and line it up with video frames
-  load_smart_tagging.py     read the tactical tagging as video-frame intervals
-  load_homography.py        read the homography; project pitch <-> pixels
-  utils.py                  pitch plotting for the notebooks
-data/                       unpack the downloaded match assets here. Empty in a fresh clone
-outputs/                    local predictions and reports; ignored except for its README
-```
+- [`starter/`](starter/) — baselines e leitores dos dados fornecidos.
+- [`evaluation/`](evaluation/) — métricas, validação de submissões e avaliação local.
+- [`src/`](src/) e [`configs/`](configs/) — espaço reservado para implementação e configurações.
+- [`notebooks/`](notebooks/) — exemplos de exploração dos dados.
+- [`docs/`](docs/) — documentação do desafio e guias de trabalho da equipe.
 
-The scorer you run locally is the scorer that decides the competition. If it scores on your
-machine, it scores the same way on ours.
+## Documentação
 
----
+A descrição completa do problema está em [CHALLENGE.md](docs/CHALLENGE.md).
+Consulte também os [dados e seus formatos](docs/DATA.md), o
+[contrato de submissão](docs/SUBMISSION.md) e as [regras](docs/RULES.md).
+As orientações de ambiente, execução e colaboração ficam no
+[guia da equipe](docs/GUIA-PROJETO.md).
 
-## Requirements
+Este repositório deriva do
+[repositório oficial da competição](https://github.com/metrica-sports/more-than-a-hack-2027).
 
-**Python 3.8 or newer.** The evaluation needs `numpy` and `pandas` and nothing else; it is tested
-under 3.8 and 3.11 and produces identical output under both. `starter/baseline.py` needs nothing
-more either — you can reach a scored submission without installing anything else.
+## Licença e dados
 
-The notebooks additionally want `kloppy` and `matplotlib` (`requirements-starter.txt`), and
-**Python 3.9+ is recommended for those**: on Windows, installing Jupyter under 3.8 hits a
-`pywinpty` build failure that has nothing to do with this repository.
-
----
-
-## Timeline
-
-| |                |
-|---|----------------|
-| registration opens | **October 1, 2026** |
-| data released | **October 20, 2026** |
-| submission deadline | **November 17, 2026** |
-| results announced | **Before November 26, 2026**      |
-
----
-
-## Questions
-
-Open an issue for anything about the data, the metrics or the documentation — corrections are
-genuinely useful, and a fix that helps you helps everyone equally. For enrolment and the terms of
-use: **hackathon.talentarena@mobileworldcapital.com**.
-
-## Licence and citation
-
-The code and documentation in this repository are released under the MIT Licence — see
-[LICENSE](LICENSE). **The match data is not covered by it**: it is separately licensed for this
-competition only, under the terms you accept at enrolment.
-
-```bibtex
-@misc{mtah2027,
-  title  = {More than a Hack 2027: Phase 1 - Ball Possession},
-  author = {Metrica Sports and FC Barcelona Innovation Hub},
-  year   = {2027},
-  url    = {https://github.com/metrica-sports/more-than-a-hack-2027}
-}
-```
+O código e a documentação seguem a [licença MIT](LICENSE).
+Os dados das partidas têm licença própria, restrita aos termos da competição,
+e não são distribuídos neste repositório. O acesso é disponibilizado pela organização
+aos participantes inscritos que aceitam os termos de uso.
