@@ -62,3 +62,20 @@ __pycache__/
 venv/
 env/
 .DS_Store
+
+# graft's local graph cache — regenerable, not committed (run `graft build`).
+/graft/
+
+# Local datasets and experiment outputs.
+*.zip
+outputs/*
+!outputs/README.md
+.ipynb_checkpoints/
+
+# Shared guides only; match assets remain private.
+!data/tactical/
+data/tactical/*
+!data/tactical/README.md
+!data/broadcast/
+data/broadcast/*
+!data/broadcast/README.md

@@ -114,8 +114,8 @@ boxes and balls in the air all lose it, which means it goes missing disproportio
 frames that matter. Any approach assuming a ball position exists on every frame will meet this on
 day two, so design for it on day one. Missing observations are `NaN`, for players and ball alike.
 
-`starter/02_tracking_atd.ipynb` walks through loading and plotting;
-`starter/03_first_submission.ipynb` turns the ATD into a scored submission.
+`notebooks/02_tracking_atd.ipynb` walks through loading and plotting;
+`notebooks/03_first_submission.ipynb` turns the ATD into a scored submission.
 
 ---
 

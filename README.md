@@ -3,6 +3,48 @@
 **Organised by [Metrica Sports](https://metrica-sports.com), [FC Barcelona](https://www.fcbarcelona.com)
 and the [Mobile World Capital Barcelona](https://www.mwcbarcelona.com)**, at the Talent Arena in Barcelona.
 
+## Organização do repositório
+
+Comece pelo [guia do projeto em português](docs/GUIA-PROJETO.md), que reúne a explicação das
+pastas, dos arquivos e da documentação original em um único lugar.
+
+[`src/`](src/README.md) fica reservada para código futuro, com configurações em
+[`configs/`](configs/README.md). Os exemplos de referência continuam em [`starter/`](starter/README.md);
+os tutoriais estão em [`notebooks/`](notebooks/README.md). A avaliação oficial permanece em
+`evaluation/`, sem mudanças no código ou nos CSVs originais.
+
+- [Mapa da documentação](docs/README.md)
+- [Pesquisa inicial, sem divisão de trabalho](docs/PESQUISA-INICIAL.md)
+- [Como preparar os dados no seu computador](docs/DADOS-LOCAIS.md)
+- [Organização, comandos e verificações](docs/ORGANIZACAO.md)
+
+**Regras:** os documentos originais abaixo refletem o checkout recebido. Consulte a
+[versão oficial atual](https://github.com/metrica-sports/more-than-a-hack-2027/blob/main/RULES.md)
+antes de definir treinamento ou validação. Os cinco minutos públicos servem para conferir o
+pipeline, não para ajustar modelos.
+
+### Ambiente e primeira execução
+
+Execute os comandos a partir da raiz do repositório:
+
+```bash
+python -m venv .venv
+source .venv/bin/activate
+python -m pip install -r requirements-lock.txt
+python starter/baseline.py --out outputs/submissions/baselines
+python evaluation/validate_submission.py outputs/submissions/baselines/baseline_smooth50.csv
+python evaluation/run_evaluation.py --results outputs/submissions/baselines --out outputs/evaluation
+```
+
+`requirements-lock.txt` registra o ambiente básico verificado na reorganização (Python 3.13).
+`requirements.txt` mantém a lista mínima original. Para usar os notebooks, instale também
+`requirements-starter.txt`. Dados, ZIPs, ambiente e resultados locais ficam fora do Git.
+
+Cada participante deve obter seus próprios arquivos pelo acesso autorizado da organização e
+seguir [a preparação dos dados locais](docs/DADOS-LOCAIS.md). As pastas `data/tactical/` e
+`data/broadcast/` levam somente guias no clone. Confira os destinos com
+`python scripts/verificar_dados.py`; não há download automático.
+
 A football data challenge on real professional match data, open to analysts, data scientists and
 engineers. You are given one complete LaLiga match — two camera feeds, automatic tracking of every
 player and the ball, automatic tactical tagging, and the camera-to-pitch geometry — and one
@@ -47,7 +89,7 @@ switches, and the ball itself is invisible on 41% of the frames you are scored o
 
 It is deliberately **not** a tracking challenge. The tracking, tagging and homography are given to
 you so that nobody has to rebuild detection, re-identification and camera calibration before
-getting to the actual question. See [CHALLENGE.md](CHALLENGE.md).
+getting to the actual question. See [CHALLENGE.md](docs/CHALLENGE.md).
 
 ---
 
@@ -79,7 +121,7 @@ rank  submission                macroF1  spellF1   poss     dur
 Those four are **the same algorithm four times** — nearest tracked player to the ball, then a
 majority vote over a window. Only the window changes. `macroF1` barely moves; `spellF1` moves by a
 factor of eleven. That disagreement is the whole point of the metric, and
-[EVALUATION.md](EVALUATION.md) explains it.
+[EVALUATION.md](docs/EVALUATION.md) explains it.
 
 Once you have the data, regenerate them yourself and go further:
 
@@ -103,7 +145,7 @@ The match assets are released to enrolled participants who have accepted the ter
 3. You receive a download link.
 4. Unpack it into `./data`, or point `MTAH_DATA_DIR` at wherever you put it.
 
-Full description of every asset and how the frames line up: **[DATA.md](DATA.md)**.
+Full description of every asset and how the frames line up: **[DATA.md](docs/DATA.md)**.
 
 ---
 
@@ -111,13 +153,13 @@ Full description of every asset and how the frames line up: **[DATA.md](DATA.md)
 
 | | |
 |---|---|
-| **[CHALLENGE.md](CHALLENGE.md)** | the problem, the four labels, what counts as possession |
-| **[DATA.md](DATA.md)** | every provided asset, its format, and the frame alignment |
-| **[EVALUATION.md](EVALUATION.md)** | how you are scored, and why — read before optimising anything |
-| **[SUBMISSION.md](SUBMISSION.md)** | the file contract, the three deliverables, how to submit |
-| **[RULES.md](RULES.md)** | what you may and may not do |
-| **[FAQ.md](FAQ.md)** | |
-| **[OVERVIEW.md](OVERVIEW.md)** | the competition as a whole — context, why the 2027 format changed, the calendar |
+| **[CHALLENGE.md](docs/CHALLENGE.md)** | the problem, the four labels, what counts as possession |
+| **[DATA.md](docs/DATA.md)** | every provided asset, its format, and the frame alignment |
+| **[EVALUATION.md](docs/EVALUATION.md)** | how you are scored, and why — read before optimising anything |
+| **[SUBMISSION.md](docs/SUBMISSION.md)** | the file contract, the three deliverables, how to submit |
+| **[RULES.md](docs/RULES.md)** | what you may and may not do |
+| **[FAQ.md](docs/FAQ.md)** | |
+| **[OVERVIEW.md](docs/OVERVIEW.md)** | the competition as a whole — context, why the 2027 format changed, the calendar |
 
 
 ---
@@ -125,7 +167,11 @@ Full description of every asset and how the frames line up: **[DATA.md](DATA.md)
 ## What is in this repository
 
 ```
-games.py                    per-match constants, asset paths and the frame alignment
+games.py                    shared match constants, asset paths and frame alignment
+src/                        future implementation; architecture and roles not defined
+configs/                    experiment configuration conventions
+docs/                       challenge documentation, research and organization guide
+notebooks/                  the three original tutorials, with updated paths
 evaluation/
   possession_metrics.py     the metric library — every number on the board is defined here
   run_evaluation.py         the scorer. This exact file produces the official result
@@ -138,10 +184,8 @@ starter/
   load_smart_tagging.py     read the tactical tagging as video-frame intervals
   load_homography.py        read the homography; project pitch <-> pixels
   utils.py                  pitch plotting for the notebooks
-  01_smart_tagging.ipynb    guided tour of the tactical tagging
-  02_tracking_atd.ipynb     guided tour of the tracking data, with plots
-  03_first_submission.ipynb data in, scored submission out — start here
 data/                       unpack the downloaded match assets here. Empty in a fresh clone
+outputs/                    local predictions and reports; ignored except for its README
 ```
 
 The scorer you run locally is the scorer that decides the competition. If it scores on your

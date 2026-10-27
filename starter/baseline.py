@@ -82,7 +82,7 @@ def team_of_each_track(meta_path):
 
     The ATD metadata lists both teams and assigns every track slot to one of them. The first team
     in the file is the home side -- the FIFA/EPTS convention, and the one kloppy follows when it
-    reports metadata.teams. For this match that is Barcelona, which DATA.md states independently.
+    reports metadata.teams. For this match that is Barcelona, which docs/DATA.md states independently.
 
     Note what these slots are NOT: there are 46 of them for 22 players on the pitch, they are
     named "Track 1".."Track 46", and their ShirtNumber is just the slot index. A slot is a
@@ -125,7 +125,7 @@ def nearest_player_labels(raw_path, team_of_track, n_frames, pitch):
                 continue
             ball = parts[2]
             if ball[0] == MISSING:
-                # No ball, no answer. 41% of graded frames land here -- see DATA.md. Leaving them
+                # No ball, no answer. 41% of graded frames land here -- see docs/DATA.md. Leaving them
                 # as NOBODY rather than guessing is what makes the D class mean anything at all.
                 continue
 

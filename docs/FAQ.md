@@ -50,7 +50,7 @@ Because per-frame decisions flicker. The raw baseline reports several times more
 the match actually had, while still looking respectable on `macroF1`.
 
 A possession is an interval, not a sequence of independent frames. Temporal smoothing, segmentation
-or a state model is the first real thing to add — `starter/03_first_submission.ipynb` walks through
+or a state model is the first real thing to add — `notebooks/03_first_submission.ipynb` walks through
 the simplest version.
 
 ### Why is the ranking metric not accuracy, or macro F1?

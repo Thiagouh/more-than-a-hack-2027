@@ -111,7 +111,7 @@ Scored on the full match:
 
 `macroF1` moves by 0.04 across the entire sweep and picks `smooth25`. `spellF1` moves by a factor
 of five and picks `smooth50`. Regenerate the files with `python starter/baseline.py`, score them
-against the public window yourself, or walk through it in `starter/03_first_submission.ipynb`.
+against the public window yourself, or walk through it in `notebooks/03_first_submission.ipynb`.
 
 **`baseline_smooth50` is the published floor: spellF1 0.2433.** Beat it.
 
