@@ -1,0 +1,428 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://local.invalid/ball-events/event-v2.schema.json",
+  "type": "object",
+  "properties": {
+    "event_frame": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+    },
+    "confirmed_at_frame": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+    },
+    "support_start_frame": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+    },
+    "support_end_frame": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+    },
+    "available_at_frame": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+    },
+    "lookahead_frames": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+    },
+    "availability_delay_frames": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+    },
+    "segment_start_frame": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+    },
+    "contract_version": {
+      "const": "v2"
+    },
+    "event_id": {
+      "type": "string",
+      "pattern": "\\S"
+    },
+    "type": {
+      "enum": [
+        "possible_control_acquisition",
+        "possible_control_loss",
+        "possible_dispute",
+        "possible_touch"
+      ]
+    },
+    "team": {
+      "enum": [
+        null,
+        "H",
+        "A"
+      ]
+    },
+    "track_ids": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "\\S"
+      },
+      "uniqueItems": true,
+      "minItems": 1
+    },
+    "strength": {
+      "enum": [
+        "low",
+        "medium",
+        "high"
+      ]
+    },
+    "components": {
+      "type": "object"
+    },
+    "reasons": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "\\S"
+      },
+      "uniqueItems": true,
+      "minItems": 1
+    },
+    "quality_flags": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "\\S"
+      },
+      "uniqueItems": true
+    },
+    "context_hints": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "start_frame": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "end_frame": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "available_at_frame": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "hint_id": {
+            "type": "string",
+            "pattern": "\\S"
+          },
+          "type": {
+            "type": "string",
+            "pattern": "\\S"
+          },
+          "producer": {
+            "type": "string",
+            "pattern": "\\S"
+          },
+          "team": {
+            "enum": [
+              null,
+              "H",
+              "A"
+            ]
+          },
+          "strength": {
+            "enum": [
+              "low",
+              "medium",
+              "high"
+            ]
+          },
+          "extensions": {
+            "type": "object"
+          }
+        },
+        "required": [
+          "available_at_frame",
+          "end_frame",
+          "hint_id",
+          "producer",
+          "start_frame",
+          "strength",
+          "team",
+          "type"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "dependencies": {
+      "type": "object",
+      "properties": {
+        "support_start_frame": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "support_end_frame": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "available_at_frame": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "point_refs": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "\\S"
+          },
+          "uniqueItems": true
+        },
+        "hint_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "\\S"
+          },
+          "uniqueItems": true
+        },
+        "event_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "\\S"
+          },
+          "uniqueItems": true
+        }
+      },
+      "required": [
+        "available_at_frame",
+        "event_ids",
+        "hint_ids",
+        "point_refs",
+        "support_end_frame",
+        "support_start_frame"
+      ],
+      "additionalProperties": false
+    },
+    "parent_event_id": {
+      "anyOf": [
+        {
+          "type": "string",
+          "pattern": "\\S"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "extensions": {
+      "type": "object"
+    }
+  },
+  "required": [
+    "availability_delay_frames",
+    "available_at_frame",
+    "components",
+    "confirmed_at_frame",
+    "context_hints",
+    "contract_version",
+    "dependencies",
+    "event_frame",
+    "event_id",
+    "lookahead_frames",
+    "parent_event_id",
+    "quality_flags",
+    "reasons",
+    "segment_start_frame",
+    "strength",
+    "support_end_frame",
+    "support_start_frame",
+    "team",
+    "track_ids",
+    "type"
+  ],
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "type": {
+            "const": "possible_control_loss"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "parent_event_id": {
+            "type": "string",
+            "pattern": "\\S"
+          }
+        }
+      },
+      "else": {
+        "properties": {
+          "parent_event_id": {
+            "type": "null"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "type": {
+            "const": "possible_touch"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "components": {
+            "type": "object",
+            "properties": {
+              "delta_speed_mps": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1e+100
+              },
+              "direction_change_deg": {
+                "anyOf": [
+                  {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 180
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "delta_speed_mps"
+            ],
+            "additionalProperties": false
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "type": {
+            "const": "possible_control_acquisition"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "components": {
+            "type": "object",
+            "properties": {
+              "persistence_frames": {
+                "type": "integer",
+                "minimum": 2,
+                "maximum": 9007199254740991
+              },
+              "margin_m": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1e+100
+              },
+              "relative_speed_mps": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1e+100
+              }
+            },
+            "required": [
+              "persistence_frames",
+              "margin_m",
+              "relative_speed_mps"
+            ],
+            "additionalProperties": false
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "type": {
+            "const": "possible_control_loss"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "components": {
+            "type": "object",
+            "properties": {
+              "persistence_frames": {
+                "type": "integer",
+                "minimum": 2,
+                "maximum": 9007199254740991
+              },
+              "distance_m": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1e+100
+              }
+            },
+            "required": [
+              "persistence_frames",
+              "distance_m"
+            ],
+            "additionalProperties": false
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "type": {
+            "const": "possible_dispute"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "components": {
+            "type": "object",
+            "properties": {
+              "distance_H_m": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1e+100
+              },
+              "distance_A_m": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1e+100
+              }
+            },
+            "required": [
+              "distance_H_m",
+              "distance_A_m"
+            ],
+            "additionalProperties": false
+          }
+        }
+      }
+    }
+  ]
+}

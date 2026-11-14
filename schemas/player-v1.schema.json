@@ -1,0 +1,96 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://local.invalid/ball-events/player-v1.schema.json",
+  "type": "object",
+  "properties": {
+    "frame": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+    },
+    "support_start_frame": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+    },
+    "support_end_frame": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+    },
+    "available_at_frame": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+    },
+    "source": {
+      "enum": [
+        "estimated",
+        "interpolated",
+        "missing",
+        "observed",
+        "unknown"
+      ]
+    },
+    "producer": {
+      "type": "string",
+      "pattern": "\\S"
+    },
+    "quality_flags": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "\\S"
+      },
+      "uniqueItems": true
+    },
+    "x_m": {
+      "anyOf": [
+        {
+          "type": "number",
+          "minimum": -1e+100,
+          "maximum": 1e+100
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "y_m": {
+      "anyOf": [
+        {
+          "type": "number",
+          "minimum": -1e+100,
+          "maximum": 1e+100
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "extensions": {
+      "type": "object"
+    },
+    "track_id": {
+      "type": "string",
+      "pattern": "\\S"
+    },
+    "team": {
+      "enum": [
+        "H",
+        "A"
+      ]
+    }
+  },
+  "required": [
+    "frame",
+    "producer",
+    "quality_flags",
+    "source",
+    "team",
+    "track_id",
+    "x_m",
+    "y_m"
+  ],
+  "additionalProperties": false
+}

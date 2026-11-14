@@ -1,0 +1,3 @@
+-r requirements.txt
+# Optional development-only schema validation; not imported by the runtime.
+jsonschema==4.26.0

@@ -1,0 +1,5 @@
+{
+  "persistence_frames": 2,
+  "persistence_mode": "frames",
+  "reference_fps": 25
+}

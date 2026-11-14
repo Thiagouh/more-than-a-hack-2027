@@ -1,0 +1,16 @@
+{
+  "proximity_m": 2.0,
+  "control_m": 1.5,
+  "margin_m": 1.0,
+  "dispute_m": 2.0,
+  "persistence_frames": 3,
+  "relative_speed_mps": 5.0,
+  "touch_delta_speed_mps": 3.0,
+  "touch_angle_deg": 30.0,
+  "direction_min_speed_mps": 2.0,
+  "ball_jump_mps": 45.0,
+  "player_jump_mps": 12.0,
+  "duplicate_m": 0.3,
+  "persistence_mode": "frames",
+  "reference_fps": 25
+}

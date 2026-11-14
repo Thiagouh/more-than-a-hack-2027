@@ -1,0 +1,62 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://local.invalid/ball-events/hint-v1.schema.json",
+  "type": "object",
+  "properties": {
+    "start_frame": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+    },
+    "end_frame": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+    },
+    "available_at_frame": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+    },
+    "hint_id": {
+      "type": "string",
+      "pattern": "\\S"
+    },
+    "type": {
+      "type": "string",
+      "pattern": "\\S"
+    },
+    "producer": {
+      "type": "string",
+      "pattern": "\\S"
+    },
+    "team": {
+      "enum": [
+        null,
+        "H",
+        "A"
+      ]
+    },
+    "strength": {
+      "enum": [
+        "low",
+        "medium",
+        "high"
+      ]
+    },
+    "extensions": {
+      "type": "object"
+    }
+  },
+  "required": [
+    "available_at_frame",
+    "end_frame",
+    "hint_id",
+    "producer",
+    "start_frame",
+    "strength",
+    "team",
+    "type"
+  ],
+  "additionalProperties": false
+}

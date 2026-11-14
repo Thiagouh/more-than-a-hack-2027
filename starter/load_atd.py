@@ -131,6 +131,126 @@ def check_alignment(dataset, game=GAME, source=DEFAULT_SOURCE):
     }
 
 
+
+def inspect_atd_metadata(meta_path, pitch, fps=None, expected_teams=None):
+    """Schema-level diagnostics; not a claim of calibrated orientation or tracking accuracy."""
+    import math
+    import xml.etree.ElementTree as ET
+    from src.ball_events.contract import InputError
+    root = ET.parse(meta_path).getroot()
+    local = lambda element: element.tag.rsplit('}', 1)[-1]
+    def name(element):
+        child = next((e for e in element if local(e) == 'Name'), None)
+        if child is None: return None
+        if not child.text or not child.text.strip(): raise InputError('ATD metadata: empty name')
+        return child.text.strip()
+    teams = [e for e in root.iter() if local(e) == 'Team']
+    ids = [e.get('id') for e in teams]
+    if len(ids) != 2 or any(not isinstance(i,str) or not i.strip() for i in ids) or len(set(ids)) != 2:
+        raise InputError('ATD metadata: expected two nonempty distinct team IDs')
+    names = [name(e) for e in teams]
+    slots = [e for e in root.iter() if local(e) == 'Player']
+    slot_ids = [e.get('id') for e in slots]
+    if not slots or any(not isinstance(i,str) or not i.strip() for i in slot_ids) or len(set(slot_ids)) != len(slot_ids):
+        raise InputError('ATD metadata: invalid player slot IDs')
+    for e in slots:
+        name(e)
+        if e.get('teamId') not in ids: raise InputError('ATD metadata: unknown slot team')
+    declared_fps = None
+    rate = next((e for e in root.iter() if local(e) == 'FrameRate'),None)
+    if rate is not None:
+        try: declared_fps=float(rate.text)
+        except (ValueError,TypeError,OverflowError): raise InputError('ATD metadata: invalid frame rate') from None
+        if not math.isfinite(declared_fps) or declared_fps <= 0 or fps is not None and declared_fps != fps:
+            raise InputError('ATD metadata: frame rate mismatch')
+    dimensions = None
+    field = next((e for e in root.iter() if local(e) == 'FieldSize'),None)
+    if field is not None:
+        values={local(e):e.text for e in field}
+        try: dimensions=[float(values['Width']),float(values['Height'])]
+        except (ValueError,TypeError,KeyError,OverflowError): raise InputError('ATD metadata: invalid field dimensions') from None
+        if any(not math.isfinite(v) or v<=0 for v in dimensions): raise InputError('ATD metadata: invalid field dimensions')
+        if any(abs(a-b)>1.0 for a,b in zip(dimensions,pitch)):
+            raise InputError('ATD metadata: field dimensions differ by more than one metre')
+    if expected_teams is not None:
+        import re
+        normalize=lambda v:re.sub('[^a-z0-9]','',v.lower()).replace('fc','')
+        for side,actual in zip(('H','A'),names):
+            if actual is not None and normalize(expected_teams[side]) != normalize(actual):
+                raise InputError('ATD metadata: team names disagree with H/A mapping')
+    return dict(team_ids=ids,team_names=names,slots=[dict(e.attrib) for e in slots],declared_fps=declared_fps,
+                declared_pitch_m=dimensions,applied_pitch_m=list(pitch),
+                dimensions_differ=dimensions is not None and dimensions != list(pitch),
+                orientation_verified=False,team_order_convention='metadata_order_home_away')
+
+
+def iter_aligned_points(meta_path, raw_path, n_frames, pitch, fps=None, expected_teams=None):
+    """Strict streaming ATD adapter. Yields metric points, never possession labels.
+
+    Uses declared metadata player order as slot order, as in the published baseline.
+    Accepts NaN pairs as missing; rejects malformed rows without printing their contents.
+    No private-reference offsets, identity repair, interpolation or model loading.
+    """
+    import math
+    import xml.etree.ElementTree as ET
+    from src.ball_events.contract import integer, number, InputError
+    integer(n_frames, 'n_frames', 1)
+    if not isinstance(pitch, (tuple,list)) or len(pitch)!=2: raise InputError('ATD: invalid pitch')
+    for v in pitch: number(v, 'pitch', True)
+    if fps is not None: number(fps, 'fps', True)
+    info = inspect_atd_metadata(meta_path, pitch, fps, expected_teams)
+    slots = info['slots']
+    mapping = {info['team_ids'][0]: 'H', info['team_ids'][1]: 'A'}
+
+    def point(group, frame):
+        fields = group.strip().split(',')
+        if len(fields) != 3:
+            raise ValueError('ATD: expected x,y,speed group')
+        try:
+            x, y, speed = map(float, fields)
+        except ValueError:
+            raise ValueError('ATD: non-numeric coordinate group') from None
+        if math.isnan(x) and math.isnan(y):
+            source, x, y = 'missing', None, None
+        elif not math.isfinite(x) or not math.isfinite(y):
+            raise ValueError('ATD: partial missing or non-finite position')
+        else:
+            source, x, y = 'observed', x * pitch[0], y * pitch[1]
+        if math.isinf(speed):
+            raise ValueError('ATD: infinite speed')
+        quality_flags = []
+        if x is not None and (not -0.2*pitch[0] <= x <= 1.2*pitch[0] or not -0.2*pitch[1] <= y <= 1.2*pitch[1]):
+            quality_flags.append('implausible_position')
+        return dict(frame=frame, x_m=x, y_m=y, source=source, producer='atd',
+                    quality_flags=quality_flags, support_start_frame=frame,
+                    support_end_frame=frame+1, available_at_frame=frame)
+
+    count = 0
+    with open(raw_path, encoding='utf-8') as handle:
+        for line in handle:
+            parts = line.strip().split(':')
+            if len(parts) != 3:
+                raise ValueError('ATD: malformed record')
+            try:
+                frame_id = int(parts[0])
+            except ValueError:
+                raise ValueError('ATD: invalid frame ID') from None
+            if frame_id != frame_id_of(count) or count >= n_frames:
+                raise ValueError('ATD: frame IDs must be exactly 1..n_frames in order')
+            groups = parts[1].split(';')
+            if len(groups) != len(slots):
+                raise ValueError('ATD: slot count does not match metadata')
+            frame = video_frame_of(frame_id)
+            players = []
+            for slot, group in zip(slots, groups):
+                p = point(group, frame)
+                p.update(track_id=slot['id'], team=mapping[slot['teamId']])
+                players.append(p)
+            yield dict(frame=frame, ball=point(parts[2], frame), players=players)
+            count += 1
+    if count != n_frames:
+        raise ValueError('ATD: incomplete frame coverage')
+
 if __name__ == '__main__':
     dataset = load()
     print("loaded {} tracking records".format(len(dataset.records)))

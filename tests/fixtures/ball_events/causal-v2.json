@@ -1,0 +1,1398 @@
+{
+  "manifest": {
+    "contract_version": "v1",
+    "dataset_id": "fixture-causal-v2",
+    "timeline": "synthetic",
+    "fps": 25,
+    "n_frames": 32,
+    "pitch_m": [
+      105.3,
+      68.0
+    ],
+    "coordinates": "metres_corner_fixed",
+    "teams": {
+      "H": "Synthetic Home",
+      "A": "Synthetic Away"
+    },
+    "producers": {
+      "synthetic": "1"
+    },
+    "continuity_starts": []
+  },
+  "frames": [
+    {
+      "frame": 0,
+      "ball": {
+        "frame": 0,
+        "x_m": 20.0,
+        "y_m": 20.0,
+        "source": "observed",
+        "producer": "synthetic",
+        "quality_flags": []
+      },
+      "players": [
+        {
+          "frame": 0,
+          "x_m": 20.0,
+          "y_m": 20.0,
+          "source": "observed",
+          "producer": "synthetic",
+          "quality_flags": [],
+          "track_id": "h1",
+          "team": "H"
+        },
+        {
+          "frame": 0,
+          "x_m": 26.0,
+          "y_m": 20.0,
+          "source": "observed",
+          "producer": "synthetic",
+          "quality_flags": [],
+          "track_id": "a1",
+          "team": "A"
+        }
+      ]
+    },
+    {
+      "frame": 1,
+      "ball": {
+        "frame": 1,
+        "x_m": 20.0,
+        "y_m": 20.0,
+        "source": "observed",
+        "producer": "synthetic",
+        "quality_flags": []
+      },
+      "players": [
+        {
+          "frame": 1,
+          "x_m": 20.0,
+          "y_m": 20.0,
+          "source": "observed",
+          "producer": "synthetic",
+          "quality_flags": [],
+          "track_id": "h1",
+          "team": "H"
+        },
+        {
+          "frame": 1,
+          "x_m": 26.0,
+          "y_m": 20.0,
+          "source": "observed",
+          "producer": "synthetic",
+          "quality_flags": [],
+          "track_id": "a1",
+          "team": "A",
+          "available_at_frame": 100
+        }
+      ]
+    },
+    {
+      "frame": 2,
+      "ball": {
+        "frame": 2,
+        "x_m": 20.0,
+        "y_m": 20.0,
+        "source": "observed",
+        "producer": "synthetic",
+        "quality_flags": []
+      },
+      "players": [
+        {
+          "frame": 2,
+          "x_m": 20.0,
+          "y_m": 20.0,
+          "source": "observed",
+          "producer": "synthetic",
+          "quality_flags": [],
+          "track_id": "h1",
+          "team": "H"
+        },
+        {
+          "frame": 2,
+          "x_m": 26.0,
+          "y_m": 20.0,
+          "source": "observed",
+          "producer": "synthetic",
+          "quality_flags": [],
+          "track_id": "a1",
+          "team": "A"
+        }
+      ]
+    },
+    {
+      "frame": 3,
+      "ball": {
+        "frame": 3,
+        "x_m": 20.0,
+        "y_m": 20.0,
+        "source": "observed",
+        "producer": "synthetic",
+        "quality_flags": []
+      },
+      "players": [
+        {
+          "frame": 3,
+          "x_m": 20.0,
+          "y_m": 20.0,
+          "source": "observed",
+          "producer": "synthetic",
+          "quality_flags": [],
+          "track_id": "h1",
+          "team": "H"
+        },
+        {
+          "frame": 3,
+          "x_m": 26.0,
+          "y_m": 20.0,
+          "source": "observed",
+          "producer": "synthetic",
+          "quality_flags": [],
+          "track_id": "a1",
+          "team": "A"
+        }
+      ]
+    },
+    {
+      "frame": 4,
+      "ball": {
+        "frame": 4,
+        "x_m": 20.0,
+        "y_m": 20.0,
+        "source": "observed",
+        "producer": "synthetic",
+        "quality_flags": []
+      },
+      "players": [
+        {
+          "frame": 4,
+          "x_m": 20.0,
+          "y_m": 20.0,
+          "source": "observed",
+          "producer": "synthetic",
+          "quality_flags": [],
+          "track_id": "h1",
+          "team": "H"
+        },
+        {
+          "frame": 4,
+          "x_m": 26.0,
+          "y_m": 20.0,
+          "source": "observed",
+          "producer": "synthetic",
+          "quality_flags": [],
+          "track_id": "a1",
+          "team": "A"
+        }
+      ]
+    },
+    {
+      "frame": 5,
+      "ball": {
+        "frame": 5,
+        "x_m": 20.0,
+        "y_m": 20.0,
+        "source": "observed",
+        "producer": "synthetic",
+        "quality_flags": []
+      },
+      "players": [
+        {
+          "frame": 5,
+          "x_m": 20.0,
+          "y_m": 20.0,
+          "source": "observed",
+          "producer": "synthetic",
+          "quality_flags": [],
+          "track_id": "h1",
+          "team": "H"
+        },
+        {
+          "frame": 5,
+          "x_m": 26.0,
+          "y_m": 20.0,
+          "source": "observed",
+          "producer": "synthetic",
+          "quality_flags": [],
+          "track_id": "a1",
+          "team": "A"
+        }
+      ]
+    },
+    {
+      "frame": 6,
+      "ball": {
+        "frame": 6,
+        "x_m": 20.0,
+        "y_m": 20.0,
+        "source": "observed",
+        "producer": "synthetic",
+        "quality_flags": []
+      },
+      "players": [
+        {
+          "frame": 6,
+          "x_m": 20.0,
+          "y_m": 20.0,
+          "source": "observed",
+          "producer": "synthetic",
+          "quality_flags": [],
+          "track_id": "h1",
+          "team": "H"
+        },
+        {
+          "frame": 6,
+          "x_m": 26.0,
+          "y_m": 20.0,
+          "source": "observed",
+          "producer": "synthetic",
+          "quality_flags": [],
+          "track_id": "a1",
+          "team": "A"
+        }
+      ]
+    },
+    {
+      "frame": 7,
+      "ball": {
+        "frame": 7,
+        "x_m": 20.0,
+        "y_m": 20.0,
+        "source": "observed",
+        "producer": "synthetic",
+        "quality_flags": []
+      },
+      "players": [
+        {
+          "frame": 7,
+          "x_m": 20.0,
+          "y_m": 20.0,
+          "source": "observed",
+          "producer": "synthetic",
+          "quality_flags": [],
+          "track_id": "h1",
+          "team": "H"
+        },
+        {
+          "frame": 7,
+          "x_m": 26.0,
+          "y_m": 20.0,
+          "source": "observed",
+          "producer": "synthetic",
+          "quality_flags": [],
+          "track_id": "a1",
+          "team": "A"
+        }
+      ]
+    },
+    {
+      "frame": 8,
+      "ball": {
+        "frame": 8,
+        "x_m": 20.4,
+        "y_m": 20.0,
+        "source": "observed",
+        "producer": "synthetic",
+        "quality_flags": []
+      },
+      "players": [
+        {
+          "frame": 8,
+          "x_m": 20.0,
+          "y_m": 20.0,
+          "source": "observed",
+          "producer": "synthetic",
+          "quality_flags": [],
+          "track_id": "h1",
+          "team": "H"
+        },
+        {
+          "frame": 8,
+          "x_m": 26.0,
+          "y_m": 20.0,
+          "source": "observed",
+          "producer": "synthetic",
+          "quality_flags": [],
+          "track_id": "a1",
+          "team": "A"
+        }
+      ]
+    },
+    {
+      "frame": 9,
+      "ball": {
+        "frame": 9,
+        "x_m": 20.8,
+        "y_m": 20.0,
+        "source": "observed",
+        "producer": "synthetic",
+        "quality_flags": []
+      },
+      "players": [
+        {
+          "frame": 9,
+          "x_m": 20.0,
+          "y_m": 20.0,
+          "source": "observed",
+          "producer": "synthetic",
+          "quality_flags": [],
+          "track_id": "h1",
+          "team": "H"
+        },
+        {
+          "frame": 9,
+          "x_m": 26.0,
+          "y_m": 20.0,
+          "source": "observed",
+          "producer": "synthetic",
+          "quality_flags": [],
+          "track_id": "a1",
+          "team": "A"
+        }
+      ]
+    },
+    {
+      "frame": 10,
+      "ball": {
+        "frame": 10,
+        "x_m": 21.2,
+        "y_m": 20.0,
+        "source": "observed",
+        "producer": "synthetic",
+        "quality_flags": []
+      },
+      "players": [
+        {
+          "frame": 10,
+          "x_m": 20.0,
+          "y_m": 20.0,
+          "source": "observed",
+          "producer": "synthetic",
+          "quality_flags": [],
+          "track_id": "h1",
+          "team": "H"
+        },
+        {
+          "frame": 10,
+          "x_m": 26.0,
+          "y_m": 20.0,
+          "source": "observed",
+          "producer": "synthetic",
+          "quality_flags": [],
+          "track_id": "a1",
+          "team": "A"
+        }
+      ]
+    },
+    {
+      "frame": 11,
+      "ball": {
+        "frame": 11,
+        "x_m": 21.6,
+        "y_m": 20.0,
+        "source": "observed",
+        "producer": "synthetic",
+        "quality_flags": []
+      },
+      "players": [
+        {
+          "frame": 11,
+          "x_m": 20.0,
+          "y_m": 20.0,
+          "source": "observed",
+          "producer": "synthetic",
+          "quality_flags": [],
+          "track_id": "h1",
+          "team": "H"
+        },
+        {
+          "frame": 11,
+          "x_m": 26.0,
+          "y_m": 20.0,
+          "source": "observed",
+          "producer": "synthetic",
+          "quality_flags": [],
+          "track_id": "a1",
+          "team": "A"
+        }
+      ]
+    },
+    {
+      "frame": 12,
+      "ball": {
+        "frame": 12,
+        "x_m": 22.0,
+        "y_m": 20.0,
+        "source": "observed",
+        "producer": "synthetic",
+        "quality_flags": []
+      },
+      "players": [
+        {
+          "frame": 12,
+          "x_m": 20.0,
+          "y_m": 20.0,
+          "source": "observed",
+          "producer": "synthetic",
+          "quality_flags": [],
+          "track_id": "h1",
+          "team": "H"
+        },
+        {
+          "frame": 12,
+          "x_m": 26.0,
+          "y_m": 20.0,
+          "source": "observed",
+          "producer": "synthetic",
+          "quality_flags": [],
+          "track_id": "a1",
+          "team": "A"
+        }
+      ]
+    },
+    {
+      "frame": 13,
+      "ball": {
+        "frame": 13,
+        "x_m": 22.4,
+        "y_m": 20.0,
+        "source": "observed",
+        "producer": "synthetic",
+        "quality_flags": []
+      },
+      "players": [
+        {
+          "frame": 13,
+          "x_m": 20.0,
+          "y_m": 20.0,
+          "source": "observed",
+          "producer": "synthetic",
+          "quality_flags": [],
+          "track_id": "h1",
+          "team": "H"
+        },
+        {
+          "frame": 13,
+          "x_m": 26.0,
+          "y_m": 20.0,
+          "source": "observed",
+          "producer": "synthetic",
+          "quality_flags": [],
+          "track_id": "a1",
+          "team": "A"
+        }
+      ]
+    },
+    {
+      "frame": 14,
+      "ball": {
+        "frame": 14,
+        "x_m": 22.8,
+        "y_m": 20.0,
+        "source": "observed",
+        "producer": "synthetic",
+        "quality_flags": []
+      },
+      "players": [
+        {
+          "frame": 14,
+          "x_m": 20.0,
+          "y_m": 20.0,
+          "source": "observed",
+          "producer": "synthetic",
+          "quality_flags": [],
+          "track_id": "h1",
+          "team": "H"
+        },
+        {
+          "frame": 14,
+          "x_m": 26.0,
+          "y_m": 20.0,
+          "source": "observed",
+          "producer": "synthetic",
+          "quality_flags": [],
+          "track_id": "a1",
+          "team": "A"
+        }
+      ]
+    },
+    {
+      "frame": 15,
+      "ball": {
+        "frame": 15,
+        "x_m": 23.2,
+        "y_m": 20.0,
+        "source": "observed",
+        "producer": "synthetic",
+        "quality_flags": []
+      },
+      "players": [
+        {
+          "frame": 15,
+          "x_m": 20.0,
+          "y_m": 20.0,
+          "source": "observed",
+          "producer": "synthetic",
+          "quality_flags": [],
+          "track_id": "h1",
+          "team": "H"
+        },
+        {
+          "frame": 15,
+          "x_m": 26.0,
+          "y_m": 20.0,
+          "source": "observed",
+          "producer": "synthetic",
+          "quality_flags": [],
+          "track_id": "a1",
+          "team": "A"
+        }
+      ]
+    },
+    {
+      "frame": 16,
+      "ball": {
+        "frame": 16,
+        "x_m": 26.0,
+        "y_m": 20.0,
+        "source": "observed",
+        "producer": "synthetic",
+        "quality_flags": []
+      },
+      "players": [
+        {
+          "frame": 16,
+          "x_m": 20.0,
+          "y_m": 20.0,
+          "source": "observed",
+          "producer": "synthetic",
+          "quality_flags": [],
+          "track_id": "h1",
+          "team": "H"
+        },
+        {
+          "frame": 16,
+          "x_m": 26.0,
+          "y_m": 20.0,
+          "source": "observed",
+          "producer": "synthetic",
+          "quality_flags": [],
+          "track_id": "a1",
+          "team": "A"
+        }
+      ]
+    },
+    {
+      "frame": 17,
+      "ball": {
+        "frame": 17,
+        "x_m": 26.0,
+        "y_m": 20.0,
+        "source": "observed",
+        "producer": "synthetic",
+        "quality_flags": []
+      },
+      "players": [
+        {
+          "frame": 17,
+          "x_m": 20.0,
+          "y_m": 20.0,
+          "source": "observed",
+          "producer": "synthetic",
+          "quality_flags": [],
+          "track_id": "h1",
+          "team": "H"
+        },
+        {
+          "frame": 17,
+          "x_m": 26.0,
+          "y_m": 20.0,
+          "source": "observed",
+          "producer": "synthetic",
+          "quality_flags": [],
+          "track_id": "a1",
+          "team": "A"
+        }
+      ]
+    },
+    {
+      "frame": 18,
+      "ball": {
+        "frame": 18,
+        "x_m": 26.0,
+        "y_m": 20.0,
+        "source": "observed",
+        "producer": "synthetic",
+        "quality_flags": []
+      },
+      "players": [
+        {
+          "frame": 18,
+          "x_m": 20.0,
+          "y_m": 20.0,
+          "source": "observed",
+          "producer": "synthetic",
+          "quality_flags": [],
+          "track_id": "h1",
+          "team": "H"
+        },
+        {
+          "frame": 18,
+          "x_m": 26.0,
+          "y_m": 20.0,
+          "source": "observed",
+          "producer": "synthetic",
+          "quality_flags": [],
+          "track_id": "a1",
+          "team": "A"
+        }
+      ]
+    },
+    {
+      "frame": 19,
+      "ball": {
+        "frame": 19,
+        "x_m": 26.0,
+        "y_m": 20.0,
+        "source": "observed",
+        "producer": "synthetic",
+        "quality_flags": []
+      },
+      "players": [
+        {
+          "frame": 19,
+          "x_m": 20.0,
+          "y_m": 20.0,
+          "source": "observed",
+          "producer": "synthetic",
+          "quality_flags": [],
+          "track_id": "h1",
+          "team": "H"
+        },
+        {
+          "frame": 19,
+          "x_m": 26.0,
+          "y_m": 20.0,
+          "source": "observed",
+          "producer": "synthetic",
+          "quality_flags": [],
+          "track_id": "a1",
+          "team": "A"
+        }
+      ]
+    },
+    {
+      "frame": 20,
+      "ball": {
+        "frame": 20,
+        "x_m": 26.0,
+        "y_m": 20.0,
+        "source": "observed",
+        "producer": "synthetic",
+        "quality_flags": []
+      },
+      "players": [
+        {
+          "frame": 20,
+          "x_m": 20.0,
+          "y_m": 20.0,
+          "source": "observed",
+          "producer": "synthetic",
+          "quality_flags": [],
+          "track_id": "h1",
+          "team": "H"
+        },
+        {
+          "frame": 20,
+          "x_m": 26.0,
+          "y_m": 20.0,
+          "source": "observed",
+          "producer": "synthetic",
+          "quality_flags": [],
+          "track_id": "a1",
+          "team": "A"
+        }
+      ]
+    },
+    {
+      "frame": 21,
+      "ball": {
+        "frame": 21,
+        "x_m": 26.0,
+        "y_m": 20.0,
+        "source": "observed",
+        "producer": "synthetic",
+        "quality_flags": []
+      },
+      "players": [
+        {
+          "frame": 21,
+          "x_m": 20.0,
+          "y_m": 20.0,
+          "source": "observed",
+          "producer": "synthetic",
+          "quality_flags": [],
+          "track_id": "h1",
+          "team": "H"
+        },
+        {
+          "frame": 21,
+          "x_m": 26.0,
+          "y_m": 20.0,
+          "source": "observed",
+          "producer": "synthetic",
+          "quality_flags": [],
+          "track_id": "a1",
+          "team": "A"
+        }
+      ]
+    },
+    {
+      "frame": 22,
+      "ball": {
+        "frame": 22,
+        "x_m": 23.0,
+        "y_m": 20.0,
+        "source": "observed",
+        "producer": "synthetic",
+        "quality_flags": []
+      },
+      "players": [
+        {
+          "frame": 22,
+          "x_m": 22.0,
+          "y_m": 20.0,
+          "source": "observed",
+          "producer": "synthetic",
+          "quality_flags": [],
+          "track_id": "h1",
+          "team": "H"
+        },
+        {
+          "frame": 22,
+          "x_m": 24.0,
+          "y_m": 20.0,
+          "source": "observed",
+          "producer": "synthetic",
+          "quality_flags": [],
+          "track_id": "a1",
+          "team": "A"
+        }
+      ]
+    },
+    {
+      "frame": 23,
+      "ball": {
+        "frame": 23,
+        "x_m": 23.0,
+        "y_m": 20.0,
+        "source": "observed",
+        "producer": "synthetic",
+        "quality_flags": []
+      },
+      "players": [
+        {
+          "frame": 23,
+          "x_m": 22.0,
+          "y_m": 20.0,
+          "source": "observed",
+          "producer": "synthetic",
+          "quality_flags": [],
+          "track_id": "h1",
+          "team": "H"
+        },
+        {
+          "frame": 23,
+          "x_m": 24.0,
+          "y_m": 20.0,
+          "source": "observed",
+          "producer": "synthetic",
+          "quality_flags": [],
+          "track_id": "a1",
+          "team": "A"
+        }
+      ]
+    },
+    {
+      "frame": 24,
+      "ball": {
+        "frame": 24,
+        "x_m": 23.0,
+        "y_m": 20.0,
+        "source": "observed",
+        "producer": "synthetic",
+        "quality_flags": []
+      },
+      "players": [
+        {
+          "frame": 24,
+          "x_m": 22.0,
+          "y_m": 20.0,
+          "source": "observed",
+          "producer": "synthetic",
+          "quality_flags": [],
+          "track_id": "h1",
+          "team": "H"
+        },
+        {
+          "frame": 24,
+          "x_m": 24.0,
+          "y_m": 20.0,
+          "source": "observed",
+          "producer": "synthetic",
+          "quality_flags": [],
+          "track_id": "a1",
+          "team": "A"
+        }
+      ]
+    },
+    {
+      "frame": 25,
+      "ball": {
+        "frame": 25,
+        "x_m": 23.0,
+        "y_m": 20.0,
+        "source": "observed",
+        "producer": "synthetic",
+        "quality_flags": []
+      },
+      "players": [
+        {
+          "frame": 25,
+          "x_m": 22.0,
+          "y_m": 20.0,
+          "source": "observed",
+          "producer": "synthetic",
+          "quality_flags": [],
+          "track_id": "h1",
+          "team": "H"
+        },
+        {
+          "frame": 25,
+          "x_m": 24.0,
+          "y_m": 20.0,
+          "source": "observed",
+          "producer": "synthetic",
+          "quality_flags": [],
+          "track_id": "a1",
+          "team": "A"
+        }
+      ]
+    },
+    {
+      "frame": 26,
+      "ball": {
+        "frame": 26,
+        "x_m": 23.0,
+        "y_m": 20.0,
+        "source": "observed",
+        "producer": "synthetic",
+        "quality_flags": []
+      },
+      "players": [
+        {
+          "frame": 26,
+          "x_m": 22.0,
+          "y_m": 20.0,
+          "source": "observed",
+          "producer": "synthetic",
+          "quality_flags": [],
+          "track_id": "h1",
+          "team": "H"
+        },
+        {
+          "frame": 26,
+          "x_m": 24.0,
+          "y_m": 20.0,
+          "source": "observed",
+          "producer": "synthetic",
+          "quality_flags": [],
+          "track_id": "a1",
+          "team": "A"
+        }
+      ]
+    },
+    {
+      "frame": 27,
+      "ball": {
+        "frame": 27,
+        "x_m": 23.0,
+        "y_m": 20.0,
+        "source": "estimated",
+        "producer": "synthetic",
+        "quality_flags": []
+      },
+      "players": [
+        {
+          "frame": 27,
+          "x_m": 22.0,
+          "y_m": 20.0,
+          "source": "observed",
+          "producer": "synthetic",
+          "quality_flags": [],
+          "track_id": "h1",
+          "team": "H"
+        },
+        {
+          "frame": 27,
+          "x_m": 24.0,
+          "y_m": 20.0,
+          "source": "observed",
+          "producer": "synthetic",
+          "quality_flags": [],
+          "track_id": "a1",
+          "team": "A"
+        }
+      ]
+    },
+    {
+      "frame": 28,
+      "ball": {
+        "frame": 28,
+        "x_m": 23.0,
+        "y_m": 20.0,
+        "source": "estimated",
+        "producer": "synthetic",
+        "quality_flags": []
+      },
+      "players": [
+        {
+          "frame": 28,
+          "x_m": 22.0,
+          "y_m": 20.0,
+          "source": "observed",
+          "producer": "synthetic",
+          "quality_flags": [],
+          "track_id": "h1",
+          "team": "H"
+        },
+        {
+          "frame": 28,
+          "x_m": 24.0,
+          "y_m": 20.0,
+          "source": "observed",
+          "producer": "synthetic",
+          "quality_flags": [],
+          "track_id": "a1",
+          "team": "A"
+        }
+      ]
+    },
+    {
+      "frame": 29,
+      "ball": {
+        "frame": 29,
+        "x_m": 23.0,
+        "y_m": 20.0,
+        "source": "estimated",
+        "producer": "synthetic",
+        "quality_flags": []
+      },
+      "players": [
+        {
+          "frame": 29,
+          "x_m": 22.0,
+          "y_m": 20.0,
+          "source": "observed",
+          "producer": "synthetic",
+          "quality_flags": [],
+          "track_id": "h1",
+          "team": "H"
+        },
+        {
+          "frame": 29,
+          "x_m": 24.0,
+          "y_m": 20.0,
+          "source": "observed",
+          "producer": "synthetic",
+          "quality_flags": [],
+          "track_id": "a1",
+          "team": "A"
+        }
+      ]
+    },
+    {
+      "frame": 30,
+      "ball": {
+        "frame": 30,
+        "x_m": null,
+        "y_m": null,
+        "source": "missing",
+        "producer": "synthetic",
+        "quality_flags": []
+      },
+      "players": [
+        {
+          "frame": 30,
+          "x_m": 22.0,
+          "y_m": 20.0,
+          "source": "observed",
+          "producer": "synthetic",
+          "quality_flags": [],
+          "track_id": "h1",
+          "team": "H"
+        },
+        {
+          "frame": 30,
+          "x_m": 24.0,
+          "y_m": 20.0,
+          "source": "observed",
+          "producer": "synthetic",
+          "quality_flags": [],
+          "track_id": "a1",
+          "team": "A"
+        }
+      ]
+    },
+    {
+      "frame": 31,
+      "ball": {
+        "frame": 31,
+        "x_m": null,
+        "y_m": null,
+        "source": "missing",
+        "producer": "synthetic",
+        "quality_flags": []
+      },
+      "players": [
+        {
+          "frame": 31,
+          "x_m": 22.0,
+          "y_m": 20.0,
+          "source": "observed",
+          "producer": "synthetic",
+          "quality_flags": [],
+          "track_id": "h1",
+          "team": "H"
+        },
+        {
+          "frame": 31,
+          "x_m": 24.0,
+          "y_m": 20.0,
+          "source": "observed",
+          "producer": "synthetic",
+          "quality_flags": [],
+          "track_id": "a1",
+          "team": "A"
+        }
+      ]
+    }
+  ],
+  "hints": [],
+  "expected_events": [
+    {
+      "contract_version": "v2",
+      "type": "possible_control_acquisition",
+      "team": "H",
+      "track_ids": [
+        "synthetic:h1"
+      ],
+      "event_frame": 1,
+      "confirmed_at_frame": 3,
+      "support_start_frame": 0,
+      "support_end_frame": 4,
+      "available_at_frame": 100,
+      "lookahead_frames": 2,
+      "availability_delay_frames": 99,
+      "strength": "high",
+      "components": {
+        "persistence_frames": 3,
+        "margin_m": 6.0,
+        "relative_speed_mps": 0.0
+      },
+      "reasons": [
+        "same_track_close",
+        "opponent_margin",
+        "compatible_motion"
+      ],
+      "quality_flags": [],
+      "context_hints": [],
+      "dependencies": {
+        "support_start_frame": 0,
+        "support_end_frame": 4,
+        "available_at_frame": 100,
+        "point_refs": [
+          "synthetic:a1@0",
+          "synthetic:a1@1",
+          "synthetic:a1@2",
+          "synthetic:a1@3",
+          "synthetic:ball@0",
+          "synthetic:ball@1",
+          "synthetic:ball@2",
+          "synthetic:ball@3",
+          "synthetic:h1@0",
+          "synthetic:h1@1",
+          "synthetic:h1@2",
+          "synthetic:h1@3"
+        ],
+        "hint_ids": [],
+        "event_ids": []
+      },
+      "parent_event_id": null,
+      "segment_start_frame": 0,
+      "event_id": "3dd365672452830a84c8ebbb"
+    },
+    {
+      "contract_version": "v2",
+      "type": "possible_touch",
+      "team": "H",
+      "track_ids": [
+        "synthetic:h1"
+      ],
+      "event_frame": 7,
+      "confirmed_at_frame": 8,
+      "support_start_frame": 5,
+      "support_end_frame": 9,
+      "available_at_frame": 8,
+      "lookahead_frames": 1,
+      "availability_delay_frames": 1,
+      "strength": "medium",
+      "components": {
+        "delta_speed_mps": 9.999999999999964,
+        "direction_change_deg": null
+      },
+      "reasons": [
+        "proximity_and_ball_motion_change"
+      ],
+      "quality_flags": [],
+      "context_hints": [],
+      "dependencies": {
+        "support_start_frame": 5,
+        "support_end_frame": 9,
+        "available_at_frame": 8,
+        "point_refs": [
+          "synthetic:a1@7",
+          "synthetic:a1@8",
+          "synthetic:ball@5",
+          "synthetic:ball@6",
+          "synthetic:ball@7",
+          "synthetic:ball@8",
+          "synthetic:h1@6",
+          "synthetic:h1@7",
+          "synthetic:h1@8"
+        ],
+        "hint_ids": [],
+        "event_ids": []
+      },
+      "parent_event_id": null,
+      "segment_start_frame": 0,
+      "event_id": "0dd3ce57a30f802309864b1e"
+    },
+    {
+      "contract_version": "v2",
+      "type": "possible_control_loss",
+      "team": "H",
+      "track_ids": [
+        "synthetic:h1"
+      ],
+      "event_frame": 13,
+      "confirmed_at_frame": 15,
+      "support_start_frame": 0,
+      "support_end_frame": 16,
+      "available_at_frame": 100,
+      "lookahead_frames": 2,
+      "availability_delay_frames": 87,
+      "strength": "medium",
+      "components": {
+        "distance_m": 3.1999999999999993,
+        "persistence_frames": 3
+      },
+      "reasons": [
+        "sustained_separation_after_control_candidate"
+      ],
+      "quality_flags": [],
+      "context_hints": [],
+      "dependencies": {
+        "support_start_frame": 0,
+        "support_end_frame": 16,
+        "available_at_frame": 100,
+        "point_refs": [
+          "synthetic:a1@0",
+          "synthetic:a1@1",
+          "synthetic:a1@13",
+          "synthetic:a1@14",
+          "synthetic:a1@15",
+          "synthetic:a1@2",
+          "synthetic:a1@3",
+          "synthetic:ball@0",
+          "synthetic:ball@1",
+          "synthetic:ball@12",
+          "synthetic:ball@13",
+          "synthetic:ball@14",
+          "synthetic:ball@15",
+          "synthetic:ball@2",
+          "synthetic:ball@3",
+          "synthetic:h1@0",
+          "synthetic:h1@1",
+          "synthetic:h1@12",
+          "synthetic:h1@13",
+          "synthetic:h1@14",
+          "synthetic:h1@15",
+          "synthetic:h1@2",
+          "synthetic:h1@3"
+        ],
+        "hint_ids": [],
+        "event_ids": [
+          "3dd365672452830a84c8ebbb"
+        ]
+      },
+      "parent_event_id": "3dd365672452830a84c8ebbb",
+      "segment_start_frame": 0,
+      "event_id": "650d43b52857f0ef4fc55312"
+    },
+    {
+      "contract_version": "v2",
+      "type": "possible_control_acquisition",
+      "team": "A",
+      "track_ids": [
+        "synthetic:a1"
+      ],
+      "event_frame": 18,
+      "confirmed_at_frame": 20,
+      "support_start_frame": 16,
+      "support_end_frame": 21,
+      "available_at_frame": 20,
+      "lookahead_frames": 2,
+      "availability_delay_frames": 2,
+      "strength": "high",
+      "components": {
+        "persistence_frames": 3,
+        "margin_m": 6.0,
+        "relative_speed_mps": 0.0
+      },
+      "reasons": [
+        "same_track_close",
+        "opponent_margin",
+        "compatible_motion"
+      ],
+      "quality_flags": [],
+      "context_hints": [],
+      "dependencies": {
+        "support_start_frame": 16,
+        "support_end_frame": 21,
+        "available_at_frame": 20,
+        "point_refs": [
+          "synthetic:a1@16",
+          "synthetic:a1@17",
+          "synthetic:a1@18",
+          "synthetic:a1@19",
+          "synthetic:a1@20",
+          "synthetic:ball@16",
+          "synthetic:ball@17",
+          "synthetic:ball@18",
+          "synthetic:ball@19",
+          "synthetic:ball@20",
+          "synthetic:h1@17",
+          "synthetic:h1@18",
+          "synthetic:h1@19",
+          "synthetic:h1@20"
+        ],
+        "hint_ids": [],
+        "event_ids": []
+      },
+      "parent_event_id": null,
+      "segment_start_frame": 0,
+      "event_id": "addfc62519372002830acf5a"
+    },
+    {
+      "contract_version": "v2",
+      "type": "possible_dispute",
+      "team": null,
+      "track_ids": [
+        "synthetic:a1",
+        "synthetic:h1"
+      ],
+      "event_frame": 23,
+      "confirmed_at_frame": 23,
+      "support_start_frame": 22,
+      "support_end_frame": 24,
+      "available_at_frame": 23,
+      "lookahead_frames": 0,
+      "availability_delay_frames": 0,
+      "strength": "medium",
+      "components": {
+        "distance_H_m": 1.0,
+        "distance_A_m": 1.0
+      },
+      "reasons": [
+        "both_teams_close"
+      ],
+      "quality_flags": [
+        "ball_derivative_unavailable"
+      ],
+      "context_hints": [],
+      "dependencies": {
+        "support_start_frame": 22,
+        "support_end_frame": 24,
+        "available_at_frame": 23,
+        "point_refs": [
+          "synthetic:a1@22",
+          "synthetic:a1@23",
+          "synthetic:ball@22",
+          "synthetic:ball@23",
+          "synthetic:h1@22",
+          "synthetic:h1@23"
+        ],
+        "hint_ids": [],
+        "event_ids": []
+      },
+      "parent_event_id": null,
+      "segment_start_frame": 0,
+      "event_id": "1c8fe087fec7ef58b2aca3b2"
+    }
+  ],
+  "expected_quality": {
+    "n_frames": 32,
+    "ball_sources": {
+      "estimated": 3,
+      "missing": 2,
+      "observed": 27
+    },
+    "quality_flag_frames": {
+      "ball_derivative_unavailable": 10,
+      "ball_jump": 2,
+      "ball_not_observed": 5,
+      "insufficient_team_coverage": 2,
+      "player_jump": 1
+    },
+    "events": {
+      "possible_control_acquisition": 2,
+      "possible_control_loss": 1,
+      "possible_dispute": 1,
+      "possible_touch": 1
+    },
+    "missing_ball_runs": 1,
+    "max_missing_ball_frames": 2,
+    "hints": 0,
+    "coverage_by_team": {
+      "A_frames_with_player": 32,
+      "H_frames_with_player": 32
+    },
+    "coverage_by_producer": {
+      "synthetic_frames_with_player": 32
+    },
+    "player_flag_observations": {},
+    "ineligible_reasons": {
+      "ball_derivative_unavailable": 10,
+      "ball_jump": 2,
+      "ball_not_observed": 5,
+      "insufficient_margin": 10,
+      "insufficient_team_coverage": 2,
+      "no_control_candidate": 21,
+      "outside_control_radius": 5,
+      "player_jump": 1,
+      "relative_speed_excess": 8,
+      "relative_speed_unavailable": 8
+    },
+    "continuity_restarts": 0,
+    "persistence": {
+      "mode": "frames",
+      "effective_frames": 3,
+      "confirmation_delay_s": 0.08,
+      "seconds": null,
+      "reference_fps": 25
+    },
+    "validation_level": "heuristic_output_not_match_accuracy",
+    "strength_is_calibrated_probability": false
+  }
+}
