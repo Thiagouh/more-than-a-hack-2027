@@ -1101,7 +1101,7 @@
         "relative_speed_mps": 0.0
       },
       "reasons": [
-        "same_track_close",
+        "same_team_close",
         "opponent_margin",
         "compatible_motion"
       ],
@@ -1130,7 +1130,7 @@
       },
       "parent_event_id": null,
       "segment_start_frame": 0,
-      "event_id": "3dd365672452830a84c8ebbb"
+      "event_id": "f75b7c65b614e603b0714027"
     },
     {
       "contract_version": "v2",
@@ -1198,7 +1198,7 @@
         "persistence_frames": 3
       },
       "reasons": [
-        "sustained_separation_after_control_candidate"
+        "sustained_team_separation_after_control_candidate"
       ],
       "quality_flags": [],
       "context_hints": [],
@@ -1209,6 +1209,7 @@
         "point_refs": [
           "synthetic:a1@0",
           "synthetic:a1@1",
+          "synthetic:a1@12",
           "synthetic:a1@13",
           "synthetic:a1@14",
           "synthetic:a1@15",
@@ -1233,12 +1234,12 @@
         ],
         "hint_ids": [],
         "event_ids": [
-          "3dd365672452830a84c8ebbb"
+          "f75b7c65b614e603b0714027"
         ]
       },
-      "parent_event_id": "3dd365672452830a84c8ebbb",
+      "parent_event_id": "f75b7c65b614e603b0714027",
       "segment_start_frame": 0,
-      "event_id": "650d43b52857f0ef4fc55312"
+      "event_id": "06a798f15817cb90a344f468"
     },
     {
       "contract_version": "v2",
@@ -1261,7 +1262,7 @@
         "relative_speed_mps": 0.0
       },
       "reasons": [
-        "same_track_close",
+        "same_team_close",
         "opponent_margin",
         "compatible_motion"
       ],
@@ -1292,7 +1293,7 @@
       },
       "parent_event_id": null,
       "segment_start_frame": 0,
-      "event_id": "addfc62519372002830acf5a"
+      "event_id": "c88795e53998c07b23e58aac"
     },
     {
       "contract_version": "v2",
@@ -1389,6 +1390,10 @@
       "mode": "frames",
       "effective_frames": 3,
       "confirmation_delay_s": 0.08,
+      "acquisition_frames": 3,
+      "loss_frames": 3,
+      "acquisition_confirmation_delay_s": 0.08,
+      "loss_confirmation_delay_s": 0.08,
       "seconds": null,
       "reference_fps": 25
     },

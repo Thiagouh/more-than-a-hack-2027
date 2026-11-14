@@ -174,7 +174,10 @@ def inspect_atd_metadata(meta_path, pitch, fps=None, expected_teams=None):
             raise InputError('ATD metadata: field dimensions differ by more than one metre')
     if expected_teams is not None:
         import re
-        normalize=lambda v:re.sub('[^a-z0-9]','',v.lower()).replace('fc','')
+        def normalize(value):
+            normalized = re.sub('[^a-z0-9]', '', value.lower()).replace('fc', '')
+            # Delivered tactical metadata spells Athletic Club as Atletic Club.
+            return {'atleticclub': 'athleticclub'}.get(normalized, normalized)
         for side,actual in zip(('H','A'),names):
             if actual is not None and normalize(expected_teams[side]) != normalize(actual):
                 raise InputError('ATD metadata: team names disagree with H/A mapping')

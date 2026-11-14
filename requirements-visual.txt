@@ -1,0 +1,3 @@
+# Optional local tracking-animation renderer only; not needed for scoring/runtime.
+-r requirements.txt
+Pillow==13.0.0

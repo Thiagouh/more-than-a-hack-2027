@@ -263,44 +263,57 @@ class Detector:
                     and d <= self.cfg['control_m'] and margins[t] >= self.cfg['margin_m']
                     and relative is not None and relative <= self.cfg['relative_speed_mps']):
                 eligible = p
+        feature['control_evidence_version'] = 'v1'
+        feature['control_eligible_team'] = eligible['team'] if eligible else None
+        feature['control_evidence_support'] = control.as_dict()
         if not ball_ok:
             self.candidate = self.active = None
             self.loss = []
         if self.active:
-            tid = self.active['player']['track_id']
-            p = pmap.get(tid)
-            if not p or not observed(p) or tid in duplicate_ids | jump_ids:
-                self.active = None
+            team = self.active['player']['team']
+            entry = candidates.get(team)
+            # Team separation requires valid coverage, not persistence of a person's ID.
+            valid = (len(candidates) == 2 and all(observed(pp) and
+                     pp['track_id'] not in duplicate_ids | jump_ids
+                     for pp, _ in candidates.values()))
+            if not valid:
                 self.loss = []
-            elif distance(p, ball) > self.cfg['proximity_m']:
-                state['deps']['loss'] = selection.union(ball_check, jump_deps[tid])
+            elif entry[1] > self.cfg['proximity_m']:
+                p = entry[0]
+                state['deps']['loss'] = selection.union(ball_check,
+                    *(jump_deps[pp['track_id']] for pp, _ in candidates.values()))
                 self.loss.append(state)
-                if len(self.loss) == self.cfg['persistence_frames']:
+                if len(self.loss) == self.cfg['loss_persistence_frames']:
+                    contributors = {pp['track_id']: pp for st in self.loss
+                                    for pp, _ in [st['candidates'][team]]}
                     events.append(self.event('possible_control_loss', self.loss[0]['frame'], self.loss,
-                                             [p], p['team'], {'distance_m': distance(p, ball), 'persistence_frames': len(self.loss)},
-                                             ['sustained_separation_after_control_candidate'],
+                                             list(contributors.values()), team,
+                                             {'distance_m': entry[1], 'persistence_frames': len(self.loss)},
+                                             ['sustained_team_separation_after_control_candidate'],
                                              parent=self.active['acquisition'], operation='loss'))
                     self.active = None
                     self.loss = []
             else:
                 self.loss = []
         if eligible:
-            tid = eligible['track_id']
-            if self.candidate and self.candidate['id'] == tid:
+            if self.candidate and self.candidate['team'] == eligible['team']:
                 self.candidate['states'].append(state)
             else:
-                self.candidate = {'id': tid, 'states': [state]}
+                self.candidate = {'team': eligible['team'], 'states': [state]}
             seq = self.candidate['states']
-            if len(seq) == self.cfg['persistence_frames'] and (not self.active or self.active['player']['track_id'] != tid):
-                acquisition = self.event('possible_control_acquisition', seq[0]['frame'], seq, [eligible], eligible['team'],
+            if len(seq) == self.cfg['acquisition_persistence_frames'] and (not self.active or self.active['player']['team'] != eligible['team']):
+                contributors = {st['candidates'][eligible['team']][0]['track_id']:
+                                st['candidates'][eligible['team']][0] for st in seq}
+                acquisition = self.event('possible_control_acquisition', seq[0]['frame'], seq,
+                                         list(contributors.values()), eligible['team'],
                                          {'persistence_frames': len(seq), 'margin_m': margins[eligible['team']],
                                           'relative_speed_mps': feature['relative_speed_mps']},
-                                         ['same_track_close', 'opponent_margin', 'compatible_motion'], operation='control')
+                                         ['same_team_close', 'opponent_margin', 'compatible_motion'], operation='control')
                 events.append(acquisition)
                 self.active = {'player': eligible, 'acquisition': acquisition}
                 self.loss = []
             # Bound memory while retaining the episode flag via a count above the threshold.
-            if len(seq) > self.cfg['persistence_frames']:
+            if len(seq) > self.cfg['acquisition_persistence_frames']:
                 seq.pop(0)
         else:
             self.candidate = None
@@ -349,6 +362,10 @@ class Detector:
                 'ineligible_reasons': dict(sorted(self.ineligible.items())), 'continuity_restarts': self.restarts,
                 'persistence': {'mode': self.cfg['persistence_mode'], 'effective_frames': self.cfg['persistence_frames'],
                                 'confirmation_delay_s': (self.cfg['persistence_frames']-1)/self.meta['fps'],
+                                'acquisition_frames': self.cfg['acquisition_persistence_frames'],
+                                'loss_frames': self.cfg['loss_persistence_frames'],
+                                'acquisition_confirmation_delay_s': (self.cfg['acquisition_persistence_frames']-1)/self.meta['fps'],
+                                'loss_confirmation_delay_s': (self.cfg['loss_persistence_frames']-1)/self.meta['fps'],
                                 'seconds': self.cfg.get('persistence_seconds'), 'reference_fps': self.cfg.get('reference_fps')},
                 'validation_level': 'heuristic_output_not_match_accuracy',
                 'strength_is_calibrated_probability': False}

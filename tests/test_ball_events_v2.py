@@ -296,6 +296,11 @@ class HardenedBoundaries(unittest.TestCase):
             meta.write_text(xml);raw.write_text('1:0.2,0.3,0;0.6,0.5,0:1.4,0.3,0\n')
             diag=inspect_atd_metadata(meta,[105.3,68],25,{'H':'Barcelona','A':'Athletic Club'})
             self.assertTrue(diag['dimensions_differ']);self.assertFalse(diag['orientation_verified'])
+            meta.write_text(xml.replace('Athletic Club', 'Atletic Club'))
+            inspect_atd_metadata(meta,[105.3,68],25,{'H':'Barcelona','A':'Athletic Club'})
+            with self.assertRaises(c.InputError):
+                inspect_atd_metadata(meta,[105.3,68],25,{'H':'Barcelona','A':'Other Club'})
+            meta.write_text(xml)
             frame=list(iter_aligned_points(meta,raw,1,[105.3,68]))[0]
             self.assertIn('implausible_position',frame['ball']['quality_flags'])
             self.assertGreater(frame['ball']['x_m'],105.3)

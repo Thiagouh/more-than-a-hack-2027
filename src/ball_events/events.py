@@ -43,7 +43,8 @@ def validate_event(e, meta):
     allowed, required = shapes[e['type']]
     c.fields(e['components'], allowed, required, 'event components')
     for key,value in e['components'].items():
-        if key=='persistence_frames': c.integer(value,key,2)
+        if key=='persistence_frames':
+            c.integer(value,key,1 if e['type']=='possible_control_acquisition' else 2)
         elif key=='direction_change_deg' and value is None: pass
         else:
             c.number(value,'component')
@@ -97,12 +98,12 @@ def validate_event(e, meta):
     parent = e['parent_event_id']
     if e['type'] == 'possible_control_loss':
         c.text(parent, 'parent_event_id')
-        if e['team'] is None or len(tids) != 1 or d['event_ids'] != [parent]:
+        if e['team'] is None or not tids or d['event_ids'] != [parent]:
             raise c.InputError('Control loss must depend on one acquisition')
     elif parent is not None or d['event_ids']:
         raise c.InputError('Only control loss may depend on an acquisition')
-    if e['type'] == 'possible_control_acquisition' and (e['team'] is None or len(tids) != 1):
-        raise c.InputError('Acquisition requires one track and team')
+    if e['type'] == 'possible_control_acquisition' and (e['team'] is None or not tids):
+        raise c.InputError('Acquisition requires contributing tracks and team')
     if e['type'] == 'possible_dispute' and (e['team'] is not None or len(tids) < 2):
         raise c.InputError('Dispute cannot select winner')
     return e
@@ -111,7 +112,7 @@ def validate_event(e, meta):
 def validate_parent(e, parent):
     if parent is None or parent['type'] != 'possible_control_acquisition' or parent['event_id'] != e['parent_event_id']:
         raise c.InputError('Loss predecessor missing or not an acquisition')
-    if (e['track_ids'] != parent['track_ids'] or e['team'] != parent['team']
+    if (e['team'] != parent['team']
             or e['segment_start_frame'] != parent['segment_start_frame']
             or e['event_frame'] < parent['confirmed_at_frame']
             or e['confirmed_at_frame'] < parent['confirmed_at_frame']

@@ -67,7 +67,7 @@ Eventos antigos v1 devem ser regenerados. O validador não inventa pais para per
 Os thresholds espaciais e de movimento permanecem os originais, ainda não validados na partida: proximidade/perda 2 m, controle 1,5 m, margem 1 m, disputa 2 m com diferença ≤1 m, velocidade relativa ≤5 m/s, mudança de velocidade ≥3 m/s ou ângulo ≥30° com velocidades ≥2 m/s, salto de bola >45 m/s, jogador >12 m/s, duplicatas ≤0,3 m.
 
 - Toque: proximidade no frame central e mudança de movimento; confirma no próximo. Proximidade sozinha não basta.
-- Aquisição: mesmo rastro próximo, margem e movimento relativo compatível durante a persistência.
+- Aquisição: mesmo time próximo, margem e movimento individual verificável durante a persistência; rastros contribuintes podem variar.
 - Perda: afastamento persistente depois de aquisição candidata; contém obrigatoriamente `parent_event_id` dessa aquisição.
 - Disputa: evidência coletiva por episódio, sem vencedor. Interpolação/estimativa só permite proximidade descritiva e disputa fraca.
 
@@ -169,3 +169,19 @@ Detector.feed mantém histórico limitado, mas o registro padrão de IDs cresce 
 A matriz de correções está em RESOLUCAO-REVISAO-FRENTE5.md. Os testes demonstram contrato e comportamento sintético. Dados da partida e consumidor real permanecem indisponíveis nesta entrega, assim como o piloto externo não executado. Bola aérea, ambiguidade de tracking e força heurística continuam limitando conclusões esportivas.
 
 Não produzir novas anotações manuais nem enviar dados reais a serviços. Outputs, assets e manifestos reais permanecem fora do Git público. Nenhum commit/publicação é automático. Divergências de regulamento/edição continuam em AVALIACAO-EQUIPE.md; pesquisa e snapshot externo estão em DADOS-EXTERNOS-FRENTE5.md.
+
+## Continuidade por time e uniformes
+
+A revisão atual confirma controle por time e permite múltiplos rastros contribuintes. A classificação visual inclui padrões próprios de goleiros; as cores reais ainda aguardam inspeção do vídeo. Consulte [API, compatibilidade e limites](IDENTIFICACAO-TIMES.md).
+
+## Comparação 3 × 5 e consumidor provisório
+
+Aquisição e perda agora aceitam persistências independentes, herdando o perfil anterior quando omitidas. Foram executados casos sintéticos pareados com aquisição 3/5 e perda fixa em 3; há um consumidor experimental separado em `src.team_possession`. Resultados, limitações e comandos: [experimento de persistência](EXPERIMENTO-PERSISTENCIA.md). A frente 5 continua entregando eventos; o consumidor provisório não resolve posse final nem bola morta.
+
+## Bola ausente e conferência pública de dois minutos
+
+O consumidor provisório aceita tolerância de bola ausente independente da persistência de controle. Foi conferido um recorte fixo da referência pública e gerada uma animação comparativa de tracking. API, fronteiras, comandos e limites: [bola ausente](BOLA-AUSENTE.md).
+
+## Métricas e posse coletiva experimental
+
+`CollectiveModel` separa eventos de controle de hipóteses de posse durante passes. A elegibilidade corrente é exposta em features versionadas, sem alterar os eventos v2. Métricas, parâmetros, interfaces e limites: [posse coletiva](METRICAS-POSSE-COLETIVA.md#11-implementação-experimental-v1).

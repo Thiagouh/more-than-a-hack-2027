@@ -82,7 +82,8 @@ def fields(value, allowed, required, name):
 def config(overrides=None, fps=None):
     overrides = {} if overrides is None else overrides
     if fps is not None: number(fps, 'fps', True)
-    allowed = set(DEFAULTS) | {'persistence_mode', 'reference_fps', 'persistence_seconds'}
+    allowed = set(DEFAULTS) | {'persistence_mode', 'reference_fps', 'persistence_seconds',
+                               'acquisition_persistence_frames', 'loss_persistence_frames'}
     fields(overrides, allowed, (), 'configuration')
     mode = overrides.get('persistence_mode', 'frames')
     if mode not in ('frames', 'duration'):
@@ -108,6 +109,10 @@ def config(overrides=None, fps=None):
         if fps is not None:
             count = max(2, math.ceil(Fraction(str(seconds)) * Fraction(str(fps))) + 1)
             out['persistence_frames'] = integer(count, 'effective persistence', 2)
+    for kind in ('acquisition', 'loss'):
+        key = f'{kind}_persistence_frames'
+        out[key] = integer(overrides.get(key, out['persistence_frames']), key,
+                           1 if kind == 'acquisition' else 2)
     return out
 
 

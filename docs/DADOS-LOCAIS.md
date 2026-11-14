@@ -8,7 +8,7 @@ proíbem redistribuir os assets e derivados que permitam reconstruí-los.
 ## 1. Obter o pacote autorizado
 
 Use o link enviado pela organização à equipe. A pasta informada nesta conversa foi
-[este Drive](https://drive.google.com/drive/folders/1hRf0Jaah5EXKJe2LFTEITYldpWZRgaD5).
+[este Drive](https://drive.google.com/drive/folders/1-fMSojsJDP-O9T3CE7wDz7Inn6MQbppt).
 Se sua conta não tiver acesso, utilize o fluxo de inscrição/contato da organização; o repositório
 não concede acesso nem redistribui uma cópia. Não é necessário compartilhar credenciais.
 
