@@ -33,6 +33,12 @@ data/*
 !data/README.md
 
 *.mp4
+*.mov
+*.MOV
+*.pt
+*.pth
+*.safetensors
+*.ckpt
 *.gzip
 *.pl3container
 
@@ -59,6 +65,7 @@ organizers/
 __pycache__/
 *.py[cod]
 .venv/
+.venv-sam3-mac/
 venv/
 env/
 .DS_Store

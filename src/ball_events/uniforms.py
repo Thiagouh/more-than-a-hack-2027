@@ -20,7 +20,17 @@ def histogram(rgb):
     h, w = image.shape[:2]
     if h < 20 or w < 10:
         return None
-    pixels = image[int(.20*h):int(.55*h), int(.20*w):int(.80*w)].reshape(-1, 3).astype(float)/255
+    return pixel_histogram(image[int(.20*h):int(.55*h), int(.20*w):int(.80*w)].reshape(-1, 3))
+
+
+def pixel_histogram(rgb):
+    """Histogram of every supplied RGB pixel, without spatial resampling."""
+    pixels = np.asarray(rgb)
+    if pixels.ndim != 2 or pixels.shape[1] != 3 or not len(pixels):
+        raise InputError('Pixels must be a nonempty N x 3 array')
+    if pixels.dtype.kind not in 'uif' or not np.isfinite(pixels).all() or (pixels < 0).any() or (pixels > 255).any():
+        raise InputError('RGB values must be finite and in 0..255')
+    pixels = pixels.astype(float)/255
     maximum, minimum = pixels.max(axis=1), pixels.min(axis=1)
     delta = maximum-minimum
     saturation = np.divide(delta, maximum, out=np.zeros_like(delta), where=maximum > 0)
