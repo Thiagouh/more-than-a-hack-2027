@@ -9,7 +9,7 @@ from PIL import Image
 from src.ball_events.uniforms import pixel_histogram
 
 SAM3_REVISION = 'eef6839bcfc3458dd52ea80535dc6bd62aea86b1'
-DESCRIPTOR_VERSION = 'masked-hsv-v2'
+DESCRIPTOR_VERSION = 'masked-hsv-v3-core'
 
 
 def sha256(path):
@@ -29,7 +29,35 @@ def mask_stack(masks, shape):
     return np.stack([binary_mask(m, shape) for m in masks]) if masks else np.zeros((0, *shape), bool)
 
 
-def torso_evidence(image, mask, excluded=None):
+def interior_mask(mask, radius):
+    """Conservative square erosion, with the image exterior treated as unknown."""
+    padded = np.pad(mask, radius, constant_values=False)
+    core = np.ones_like(mask)
+    for dy in range(2*radius+1):
+        for dx in range(2*radius+1):
+            core &= padded[dy:dy+mask.shape[0], dx:dx+mask.shape[1]]
+    return core
+
+
+def reviewed_box_quality(mask, box):
+    """Measure leakage without clipping a bad mask into an apparently good one."""
+    values = np.asarray(box)
+    if (values.shape != (4,) or values.dtype.kind not in 'uif'
+            or not np.isfinite(values).all()):
+        raise ValueError('Invalid reviewed box')
+    x0,y0,x1,y1 = values
+    if not (0 <= x0 < x1 <= mask.shape[1] and 0 <= y0 < y1 <= mask.shape[0]):
+        raise ValueError('Reviewed box outside image')
+    left,top = int(np.floor(x0)),int(np.floor(y0))
+    right,bottom = int(np.ceil(x1)),int(np.ceil(y1))
+    area = int(mask.sum())
+    outside = area-int(mask[top:bottom,left:right].sum())
+    fraction = outside/area if area else 0.
+    return dict(outside_box_pixels=outside, outside_box_fraction=fraction), (
+        'mask_escapes_reviewed_box' if fraction > .1 else None)
+
+
+def torso_evidence(image, mask, excluded=None, *, return_mask=False):
     image = np.asarray(image)
     if (image.ndim != 3 or image.shape[2] != 3 or image.dtype.kind not in 'uif'
             or not np.isfinite(image).all() or (image < 0).any() or (image > 255).any()):
@@ -37,6 +65,7 @@ def torso_evidence(image, mask, excluded=None):
     mask = binary_mask(mask, image.shape[:2])
     excluded = np.zeros_like(mask) if excluded is None else binary_mask(excluded, mask.shape)
     quality = dict(mask_pixels=int(mask.sum()), torso_pixels=0, valid_torso_pixels=0,
+                   boundary_torso_pixels=0, core_radius=0,
                    removed_torso_pixels=0, valid_torso_fraction=0.,
                    overlap_pixels=int((mask & excluded).sum()))
     ys, xs = np.where(mask)
@@ -51,13 +80,18 @@ def torso_evidence(image, mask, excluded=None):
     torso = np.zeros_like(mask)
     torso[y0+int(.2*h):y0+int(.55*h),x0+int(.2*w):x0+int(.8*w)] = True
     torso &= mask
-    valid = torso & ~excluded
+    radius = max(1, int(np.ceil(.05*w)))
+    core = torso & interior_mask(mask, radius)
+    valid = core & ~excluded
     total, count = int(torso.sum()), int(valid.sum())
     quality.update(torso_pixels=total, valid_torso_pixels=count,
+                   boundary_torso_pixels=int((torso & ~core).sum()), core_radius=radius,
                    removed_torso_pixels=total-count,
                    valid_torso_fraction=count/total if total else 0.)
     if count < 24 or quality['valid_torso_fraction'] < .5:
         return None, quality, 'insufficient_torso'
+    if return_mask:
+        return valid, quality, None
     return pixel_histogram(image[valid]), quality, None
 
 

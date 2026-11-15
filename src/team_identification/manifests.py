@@ -8,7 +8,7 @@ from pathlib import Path
 import numpy as np
 from PIL import Image
 from .pilot import (DESCRIPTOR_VERSION, SAM3_REVISION, TeamClassifier, binary_mask,
-                    mask_stack, mask_flags, torso_evidence, sha256)
+                    mask_stack, mask_flags, torso_evidence, sha256, reviewed_box_quality)
 
 PARAMETERS = dict(max_distance=.35, min_margin=.10)
 LABELS = {('H', 'player'), ('A', 'player'), ('H', 'goalkeeper'),
@@ -66,7 +66,7 @@ def validate_initial(spec, image):
         raise ValueError('Both outfield teams required')
 
 
-def freeze(candidate_path, out):
+def freeze(candidate_path, out, *, require_complete=False):
     candidate_path, out = Path(candidate_path), Path(out)
     spec = read_json(candidate_path)
     if spec.get('stage') != 'candidate' or spec.get('sam3_revision') != SAM3_REVISION:
@@ -75,6 +75,15 @@ def freeze(candidate_path, out):
         raise ValueError('Candidate checkpoint provenance required')
     if spec.get('mask_reviewed') is not True or not isinstance(spec.get('reviewer'),str) or not spec['reviewer'].strip():
         raise ValueError('Inspect mask review and explicitly approve it with reviewer')
+    from .reference_review import PROFILE, require_complete as validate_complete
+    from .goalkeeper_context import CONTEXT_PROFILE
+    profile = spec.get('reference_profile', 'legacy-partial')
+    if profile not in ('legacy-partial', PROFILE, CONTEXT_PROFILE):
+        raise ValueError('Unknown reference profile')
+    if require_complete or profile in (PROFILE, CONTEXT_PROFILE):
+        validate_complete(spec)
+        if profile != CONTEXT_PROFILE:
+            profile = PROFILE
     base = candidate_path.parent
     # All candidates participate in overlap exclusion, including rejected references.
     rows = spec['references']
@@ -102,9 +111,7 @@ def freeze(candidate_path, out):
         if flags[group.index(i)]:
             raise ValueError('Duplicate or merged reference: '+row['label'])
         if 'box' in row:
-            x0,y0,x1,y1=map(int,row['box'])
-            inside=int(masks[i][y0:y1,x0:x1].sum())
-            if inside/max(1,int(masks[i].sum())) < .9:
+            if reviewed_box_quality(masks[i], row['box'])[1]:
                 raise ValueError('Reference mask escapes reviewed box: '+row['label'])
         d, quality, reason = torso_evidence(images[i], masks[i], stack.sum(axis=0)>1)
         if reason:
@@ -121,11 +128,14 @@ def freeze(candidate_path, out):
             raise ValueError('Each outfield team requires sun and shade')
     if not any(r['role'] == 'referee' for r in selected):
         raise ValueError('Approved referee reference required')
-    bundle = dict(stage='frozen', descriptor_version=DESCRIPTOR_VERSION,
+    bundle = dict(stage='frozen', reference_profile=profile, mask_reviewed=True,
+                  descriptor_version=DESCRIPTOR_VERSION,
                   sam3_revision=SAM3_REVISION, parameters=PARAMETERS,
                   checkpoint_sha256=spec['checkpoint_sha256'],environment=spec.get('environment'),
                   candidate_sha256=sha256(candidate_path), reviewer=spec['reviewer'],
                   references=selected)
+    if profile == CONTEXT_PROFILE:
+        bundle['goalkeeper_context_policy'] = spec['goalkeeper_context_policy']
     # Retain every input mask needed to reproduce overlap exclusion.
     bundle['evidence'] = [dict(image=str((base/r['image']).resolve()),
                               mask=str((base/r['mask']).resolve()),
@@ -152,6 +162,13 @@ def load_frozen(path):
     if (spec.get('stage') != 'frozen' or spec.get('descriptor_version') != DESCRIPTOR_VERSION
             or spec.get('sam3_revision') != SAM3_REVISION or not spec.get('reviewer')):
         raise ValueError('Approved frozen references required')
+    from .reference_review import PROFILE, require_complete as validate_complete
+    from .goalkeeper_context import CONTEXT_PROFILE
+    profile = spec.get('reference_profile', 'legacy-partial')
+    if profile not in ('legacy-partial', PROFILE, CONTEXT_PROFILE):
+        raise ValueError('Unknown reference profile')
+    if profile in (PROFILE, CONTEXT_PROFILE):
+        validate_complete(spec)
     base = Path(path).parent
     evidence = spec['evidence']
     if not evidence or len({r['label'] for r in spec['references']}) != len(spec['references']):
@@ -174,6 +191,8 @@ def load_frozen(path):
         image = load_image(base/row['image'])
         with Image.open(base/row['mask']) as m:
             mask = binary_mask(m, np.asarray(image).shape[:2])
+        if 'box' in row and reviewed_box_quality(mask, row['box'])[1]:
+            raise ValueError('Frozen mask escapes reviewed box')
         group = [r for r in evidence if r['image_sha256'] == row['image_sha256']]
         masks = []
         for other in group:

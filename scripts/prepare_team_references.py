@@ -6,7 +6,7 @@ from pathlib import Path
 import numpy as np
 from PIL import Image, ImageDraw
 
-from src.team_identification.pilot import Sam3, SAM3_REVISION, sha256, torso_evidence, mask_flags
+from src.team_identification.pilot import Sam3, SAM3_REVISION, sha256, torso_evidence, mask_flags, reviewed_box_quality
 from src.team_identification.manifests import validate_initial, load_image, freeze, write_json
 
 
@@ -56,9 +56,12 @@ def main():
     parser.add_argument('--out', type=Path, required=True)
     parser.add_argument('--boxes-only', action='store_true')
     parser.add_argument('--freeze', action='store_true', help='Freeze explicitly approved candidate manifest; no GPU')
+    parser.add_argument('--require-complete',action='store_true',help='Require reviewed H/A sun/shade, referee and both own goalkeepers when freezing')
     args = parser.parse_args()
+    if args.require_complete and not args.freeze:
+        parser.error('--require-complete requires --freeze')
     if args.freeze:
-        freeze(args.manifest,args.out)
+        freeze(args.manifest,args.out,require_complete=args.require_complete)
         return
     spec = json.loads(args.manifest.read_text())
     image_path = args.manifest.parent / spec['initial_image']
@@ -94,13 +97,17 @@ def main():
     overlap=masks.sum(axis=0)>1
     for index,(row, mask, score) in enumerate(zip(annotations, masks, scores)):
         _,quality,reason=torso_evidence(image,mask,overlap)
+        box_quality,box_reason=reviewed_box_quality(mask,row['box'])
+        quality.update(box_quality)
         name = row['label'] + '.png'
         Image.fromarray(mask.astype('uint8') * 255).save(mask_dir / name)
         references.append(dict(image='reference-image.png', mask='reference-masks/' + name,
                                team=row['team'], role=row['role'], label=row['label'],
                                box=row['box'],
-                               quality=quality,quality_reason=flags[index] or reason,
+                               quality=quality,quality_reason=flags[index] or box_reason or reason,
                                approved=False, lighting=row.get('lighting'),origin='pre-kickoff',
+                               source_sha256=row.get('source_sha256',spec.get('source_sha256')),
+                               source_segment_id=row.get('source_segment_id',spec.get('source_segment_id')),
                                image_sha256=sha256(args.out/'reference-image.png'),
                                mask_sha256=sha256(mask_dir/name),
                                segmentation_score=float(score)))

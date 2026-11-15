@@ -1,0 +1,12 @@
+{
+  "version": "bar-ath-defending-ends-v1",
+  "match": "BAR-ATH",
+  "confirmed_by": "user",
+  "confirmation_date": "2026-11-15",
+  "side_semantics": "reviewed_defended_pitch_end",
+  "first_half": {"left": "H", "right": "A"},
+  "second_half": {"left": "A", "right": "H"},
+  "kit_observations": {"H": "green", "A": "teal"},
+  "status": "experimental_user_context_not_visual_reference",
+  "notes": "User reports Barcelona left/green and Athletic right/teal in first half, switching ends in second. Require known period, reviewed orientation and proximity to defended goal. Never assign by color or screen half alone."
+}

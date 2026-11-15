@@ -12,6 +12,7 @@ import subprocess
 from evaluation import possession_metrics as pm
 from src.ball_events.artifacts import sha
 from starter.load_atd import iter_aligned_points
+from src.team_possession.render_observations import render_status
 
 
 def main():
@@ -60,8 +61,20 @@ def main():
     telemetry_model=next((p for p in reversed(profiles) if state_rows[p]),None)
     width,height=960,1100 if telemetry_model else 820
     base=Image.new('RGB',(width,height),'#f3f6f4');draw=ImageDraw.Draw(base)
-    draw.text((24,16),'Tracking + gabarito publico | '+ ' / '.join(protocol.get('model_names',{}).get(p,p) for p in profiles),font=title,fill='#18333e')
-    draw.text((24,49),'Animacao gerada do ATD. Nao e filmagem nem o video demonstrativo original.',font=body,fill='#52636a')
+    heading='Tracking + gabarito publico | '+ ' / '.join(protocol.get('model_names',{}).get(p,p) for p in profiles)
+    heading_size=24
+    while draw.textlength(heading,font=font(heading_size))>width-48 and heading_size>14:heading_size-=1
+    draw.text((24,16),heading,font=font(heading_size),fill='#18333e')
+    status = protocol.get('integration_status')
+    if status and status.get('sam3_executed'):
+        mode='bola nas maos revisada' if status.get('visual_control_evidence_modes')==['reviewed_held_ball'] else 'controle experimental'
+        subtitle=(f"SAM: {status.get('visual_observation_frames',0)} controles / {status.get('recovery_frames',0)} recuperacoes | revisao offline | base ATD"
+                  if status.get('recovery_frames') else f"Piloto SAM 3: {status.get('visual_observation_frames',0)} frames | {mode} | demais equipes: ATD")
+    elif status and status.get('goalkeeper_context_applied') is False:
+        subtitle='Equipes do ATD | SAM 3 e regra visual dos goleiros: nao aplicados nesta execucao.'
+    else:
+        subtitle='Animacao gerada do ATD. Nao e filmagem nem o video demonstrativo original.'
+    draw.text((24,49),subtitle,font=body,fill='#52636a')
     draw.text((24,170),f'Bola ausente: ate {protocol.get("missing_ball_grace_frames",5)} frames | Perda: {protocol.get("loss_frames",3)} frames.',font=body,fill='#18333e')
     left,top,pw,ph=70,218,820,530
     draw.rectangle((left,top,left+pw,top+ph),fill='#196346',outline='white',width=2)
@@ -108,17 +121,46 @@ def main():
                         overlay.line(points,fill=(220,240,150,70),width=max(3,int(3/meta['pitch_m'][0]*pw)))
                         draw=ImageDraw.Draw(image)
                         draw.line(points,fill='#dcf096',width=2)
-                for p in envelope['players']:
-                    if p['source']=='missing':continue
+                review=(telemetry or {}).get('tracking_review',[])
+                rejected={r['track_id'] for r in review if r['action']=='reject_observation'}
+                assigned={r['track_id']:r for r in review if r['action']=='goalkeeper_assignment'}
+                roles={r['track_id']:r for r in review if r['action']=='goalkeeper_role'}
+                corrections={r['target_track_id']:r for r in (telemetry or {}).get('recovered_observations',[])
+                             if r.get('status')=='accepted_team_correction'}
+                for raw_point in envelope['players']:
+                    p=dict(raw_point)
+                    if p['track_id'] in corrections:p['team']=corrections[p['track_id']]['team']
+                    if render_status(p,f,meta['pitch_m']) not in ('drawn','drawn_with_quality_warning'):continue
                     x=left+p['x_m']/meta['pitch_m'][0]*pw;y=top+p['y_m']/meta['pitch_m'][1]*ph
                     if left-8<=x<=left+pw+8 and top-8<=y<=top+ph+8:
-                        draw.ellipse((x-6,y-6,x+6,y+6),fill=colors[p['team']],outline='white',width=1)
+                        if p['track_id'] in assigned:
+                            draw.ellipse((x-8,y-8,x+8,y+8),fill=colors['H'],outline='#9ef1bc',width=2)
+                            draw.text((x+10,y-12),'G-H',font=body,fill='white')
+                            continue
+                        if p['track_id'] in rejected:
+                            draw.line((x-5,y-5,x+5,y+5),fill='#bfc7c9',width=2)
+                            draw.line((x-5,y+5,x+5,y-5),fill='#bfc7c9',width=2)
+                            continue
+                        if p['track_id'] in roles:
+                            draw.ellipse((x-8,y-8,x+8,y+8),fill=colors[p['team']],outline='#9ef1bc',width=2)
+                            draw.text((x+10 if x<left+pw/2 else x-45,y-12),'G-'+p['team'],font=body,fill='white')
+                            continue
+                        draw.ellipse((x-6,y-6,x+6,y+6),fill=colors[p['team']],outline='#ff00ff' if p['track_id'] in corrections else 'white',width=2 if p['track_id'] in corrections else 1)
+                if telemetry:
+                    for recovered in telemetry.get('recovered_observations',[]):
+                        if recovered.get('status')!='accepted':continue
+                        x,y=project(recovered['pitch_xy'])
+                        draw.rectangle((x-7,y-7,x+7,y+7),fill=colors[recovered['team']],outline='#ff00ff',width=2)
                 b=envelope['ball']
-                if b['source']!='missing':
+                if render_status(b,f,meta['pitch_m']) in ('drawn','drawn_with_quality_warning'):
                     x=left+b['x_m']/meta['pitch_m'][0]*pw;y=top+b['y_m']/meta['pitch_m'][1]*ph
                     if left-8<=x<=left+pw+8 and top-8<=y<=top+ph+8:draw.ellipse((x-5,y-5,x+5,y+5),fill='white',outline='black',width=2)
                 else:draw.text((left+12,top+12),'Bola ausente do tracking',font=body,fill='white')
                 if telemetry:
+                    game=telemetry.get('game_state',{})
+                    recovery_count=sum(r.get('status')=='accepted' for r in telemetry.get('recovered_observations',[]))
+                    annotation='Bola morta | evidencia visual revisada' if game.get('dead') else 'Recuperacoes visuais revisadas: '+str(recovery_count)
+                    draw.text((left+12,top+ph-24),annotation,font=body,fill='white')
                     metrics=telemetry['metrics']
                     if telemetry.get('metric_frame')==f:
                         shown=set()
@@ -128,22 +170,41 @@ def main():
                             if not left<=x<=left+pw or not top<=y<=top+ph:continue
                             shown.add(candidate['team'])
                             draw.ellipse((x-11,y-11,x+11,y+11),outline='#dcf096',width=2)
-                            draw.text((x+12,y-15),f"{candidate['meeting_time_s']:.2f}s",font=body,fill='white')
+                            label=f"{candidate['meeting_time_s']:.2f}s"
+                            label_width=draw.textlength(label,font=body)
+                            label_x=min(x+12,left+pw-label_width-4)
+                            label_y=max(top+4,min(top+ph-22,y-28 if candidate['team']=='H' else y+12))
+                            draw.text((label_x,label_y),label,font=body,fill='white')
                     draw.rounded_rectangle((24,815,936,1080),radius=10,fill='white')
                     def fmt(value,unit='',signed=False):
                         return 'indisponivel' if value is None else (f'{value:+.2f}' if signed else f'{value:.2f}')+unit
                     origin=names.get(telemetry.get('origin_team'),'indisponivel')
                     ctrl=names.get(telemetry.get('control_observed_team'),'nenhuma')
+                    visual=telemetry.get('visual_control',{})
+                    if ctrl=='nenhuma' and visual.get('accepted'):
+                        ctrl=names.get(visual.get('team'),'incerto')+' (visual)'
                     draw.text((40,830),f"Estado: {telemetry['state'].upper()} | Origem: {origin} | Evid. controle: {ctrl}",font=body,fill='#18333e')
                     draw.text((40,865),'Encontro origem: '+fmt(metrics.get('origin_team_meeting_time_s'),' s')+' | adversario: '+fmt(metrics.get('opponent_meeting_time_s'),' s'),font=body,fill='#18333e')
                     draw.text((40,900),'Vantagem: '+fmt(metrics.get('meeting_time_advantage_s'),' s',True)+' | Erro trajetoria: '+fmt(metrics.get('trajectory_error_m'),' m'),font=body,fill='#18333e')
                     coverage=metrics.get('observed_players_by_team') or {}
                     draw.text((40,935),f"Rastros observados H/A: {coverage.get('H','-')}/{coverage.get('A','-')} | Bola indisponivel: {telemetry['ball_unavailable_run_frames']} frames",font=body,fill='#18333e')
                     explanations={
+                        'causal_context_continuity':'Historico causal de 25 frames sustenta a equipe anterior',
+                        'observed_receiver_continuity':'Recebedor observado se aproxima; hipotese de passe limitada',
+                        'observed_sender_outgoing_launch':'Bola saindo do passador observado; aguarda recebedor',
+                        'verified_restart':'Reinicio revisado; aguarda controle sustentado',
+                        'verified_restart_tracking_confirmed':'Reinicio revisado e controle atual do mesmo time',
+                        'dead_ball_evidence_expired':'Evidencia de interrupcao expirou; estado desconhecido',
                         'no_confirmed_origin':'Sem controle anterior confirmado',
                         'short_ball_gap_hold':'Ausencia curta: hipotese mantida',
                         'ball_unavailable':'Bola sem informacao suficiente',
                         'metrics_not_currently_available':'Evidencia ainda nao disponivel',
+                        'sustained_probable_reception':'Recepcao provavel sustentada: recuperacao antecipada',
+                        'kickoff_tracking_confirmed':'Posse inicial: kickoff conferido no tracking',
+                        'kickoff_center_setup_inferred':'Kickoff: equipe inferida pela formacao no centro',
+                        'kickoff_opening_prior':'Hipotese de abertura: aguarda controle; duracao limitada',
+                        'visual_reviewed_goalkeeper_control':'Goleiro: SAM 3 + contexto + bola nas maos revisada',
+                        'visual_control_corroborated':'Controle visual sustentado por observacoes SAM 3',
                         'current_control_evidence':'Controle do time sustentado pela observacao',
                         'origin_support_expired':'Origem antiga: aguarda novo controle',
                         'insufficient_team_motion_coverage':'Poucos rastros com movimento confiavel',
@@ -154,10 +215,14 @@ def main():
                         'opponent_interception_opportunity':'Adversario pode chegar primeiro; controle nao confirmado',
                         'ball_quality_or_pitch_boundary':'Bola fora do campo ou posicao incerta',
                     }
-                    reason_text=explanations.get(telemetry['reason'],'Evidencia insuficiente')
+                    reason_text='Interrupcao verificada por revisao visual offline' if game.get('dead') else explanations.get(telemetry['reason'],'Evidencia insuficiente')
                     draw.text((40,970),'Motivo: '+reason_text,font=body,fill='#18333e')
-                    draw.text((40,1005),'Amarelo: previsao e candidatos. Oportunidade nao confirma recuperacao.',font=body,fill='#52636a')
-                    draw.text((40,1040),'Parametros experimentais | altura da bola indisponivel | sem modelo de bola morta',font=body,fill='#52636a')
+                    context=telemetry.get('temporal_context',{})
+                    if review:
+                        legend=f"Contexto: {context.get('window_frames',0)} f | G-H/G-A: goleiros | cruz cinza: ATD rejeitado"
+                    else:legend='Amarelo: previsao / candidatos | Magenta: observacao visual revisada.'
+                    draw.text((40,1005),legend,font=body,fill='#52636a')
+                    draw.text((40,1040),'Parametros experimentais | altura indisponivel | '+('D exige evidencia verificada' if 'game_state' in telemetry else 'sem modelo de bola morta'),font=body,fill='#52636a')
                 if rendered==0:image.save(args.run/'preview.png')
                 proc.stdin.write(image.tobytes());rendered+=1
         finally:

@@ -9,13 +9,60 @@ from PIL import Image
 
 from src.ball_events.uniforms import pixel_histogram
 from src.team_identification.pilot import (descriptor, torso_evidence, TeamClassifier,
-                                           Sam3, sha256, SAM3_REVISION, verify_installation)
+                                           Sam3, sha256, SAM3_REVISION, verify_installation,
+                                           reviewed_box_quality)
 from src.team_identification.manifests import (freeze, load_frozen, write_json,
                                               validate_initial, validate_run)
 from src.team_identification.evaluation import evaluate
 
 
 class PilotSafetyTests(unittest.TestCase):
+    def test_boundary_pixels_removed_without_reframing(self):
+        image=np.full((100,60,3),(0,255,0),np.uint8)
+        mask=np.zeros((100,60),bool)
+        mask[10:90,10:50]=True
+        mask[26:54,21:24]=False
+        core,q,reason=torso_evidence(image,mask,return_mask=True)
+        self.assertIsNone(reason)
+        self.assertGreater(q['boundary_torso_pixels'],0)
+        self.assertFalse(core[30,24])
+        self.assertTrue(core[30,30])
+        self.assertFalse(core[:26].any())
+        excluded=np.zeros_like(mask);excluded[30:35,30:35]=True
+        other,_,_=torso_evidence(image,mask,excluded,return_mask=True)
+        self.assertFalse(other[excluded].any())
+        self.assertTrue(np.all(other <= core))
+
+    def test_box_leakage_rejects_instead_of_clipping(self):
+        mask=np.ones((80,40),bool)
+        before=mask.copy()
+        q,reason=reviewed_box_quality(mask,[10,0,30,80])
+        self.assertEqual(reason,'mask_escapes_reviewed_box')
+        self.assertEqual(q['outside_box_fraction'],.5)
+        np.testing.assert_array_equal(mask,before)
+        with self.assertRaises(ValueError):
+            reviewed_box_quality(mask,[-1,0,40,80])
+
+    def test_offline_audit_preserves_candidates_and_detects_tampering(self):
+        from scripts.audit_team_masks import audit
+        with tempfile.TemporaryDirectory() as temp:
+            root=Path(temp)
+            manifest,spec=self.make_candidate(root)
+            for row in spec['references']:
+                row['box']=[0,0,40,80]
+            write_json(manifest,spec)
+            before=sha256(manifest)
+            audit(manifest,root/'audit')
+            report=json.loads((root/'audit/audit.json').read_text())
+            self.assertFalse(report['model_executed'])
+            self.assertTrue(all(not r['approved'] for r in report['findings']))
+            self.assertEqual(sha256(manifest),before)
+            with self.assertRaises(FileExistsError):
+                audit(manifest,root/'audit')
+            (root/spec['references'][0]['mask']).write_bytes(b'tampered')
+            with self.assertRaisesRegex(ValueError,'hash mismatch'):
+                audit(manifest,root/'bad')
+
     def setUp(self):
         self.red=np.full((80,40,3),(255,0,0),np.uint8)
         self.blue=np.full((80,40,3),(0,0,255),np.uint8)
@@ -156,18 +203,17 @@ class PilotSafetyTests(unittest.TestCase):
 
     def test_runner_mocked_without_pixel_mutation(self):
         from scripts.run_team_pilot import main
+        from scripts.demo_team_evaluation import create_inputs
         with tempfile.TemporaryDirectory() as temp:
-            root=Path(temp);path,_=self.make_candidate(root);freeze(path,root/'frozen')
-            bundle=root/'frozen/frozen-references.json'
-            image=root/'eval.png';Image.new('RGB',(40,80),(254,0,0)).save(image)
-            spec=dict(source='broadcast',frozen_references=str(bundle),frozen_sha256=sha256(bundle),
-                      frames=[dict(frame=1,timestamp_s=1,image=image.name,image_sha256=sha256(image),split='evaluation')])
-            manifest=root/'run.json';write_json(manifest,spec)
+            root=Path(temp)/'demo'
+            masks=create_inputs(root,'full_frame')
+            image=root/'raw/evaluation.png'
+            manifest=root/'run/run-manifest.json'
             before=sha256(image)
             with patch('scripts.run_team_pilot.Sam3') as sam, patch('sys.argv',[
                 'pilot','--manifest',str(manifest),'--checkpoint','unused',
                 '--checkpoint-sha256','0'*64,'--out',str(root/'out')]):
-                sam.return_value.segment.return_value=(np.array([self.mask]),np.array([.9]))
+                sam.return_value.segment.return_value=(masks,np.ones(len(masks)))
                 sam.return_value.environment={'mock':True}
                 main()
             self.assertEqual(sha256(image),before)
@@ -176,11 +222,9 @@ class PilotSafetyTests(unittest.TestCase):
             self.assertTrue((root/'out/provenance.json').exists())
 
     def test_evaluation_duplicates_misses_and_uncertainty(self):
-        person=lambda label,x: dict(label=label,box=[x,0,x+10,40],classification='H',
-                                   evaluable=True,lighting='sun',occlusion='isolated')
-        truth=dict(reviewed=True,reviewer='test',frames=[dict(frame=1,people=[person('p1',0),person('p2',30)])])
-        predictions=[dict(frame=1,detections=[
-            dict(box=[0,0,10,40],classification='H'),dict(box=[0,0,10,40],classification='uncertain')])]
+        from tests.team_evaluation_fixtures import person,truth_for,prediction
+        truth=truth_for([person('p1',0),person('p2',30)])
+        predictions=[dict(frame=0,detections=[prediction(),prediction(classification='uncertain',role='unknown')])]
         report=evaluate(truth,predictions)
         self.assertEqual(report['precision_accepted'],1)
         self.assertEqual(report['coverage'],.5)

@@ -151,7 +151,8 @@ def arrival_metrics(ball, ball_fit, players, fits, cfg, meta):
             relative=length(tuple(a-b for a,b in zip(ball_fit['velocity'],velocity)))
             approaches.append((meeting,p['track_id'],approach,relative))
             result['candidates'].append(dict(track_id=p['track_id'],team=team,position_xy=list(xy(p)),
-                meeting_time_s=meeting,approach_distance_m=approach,relative_speed_mps=relative))
+                meeting_time_s=meeting,approach_distance_m=approach,relative_speed_mps=relative,
+                distance_m=math.dist(xy(ball),xy(p))))
         info['exposure_fraction']=sum(exposed)/len(forecast)
         info['candidates_count']=len(approaches)
         info['reason']='no_meeting_within_horizon'

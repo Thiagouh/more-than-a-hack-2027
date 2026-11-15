@@ -1,0 +1,45 @@
+{
+  "source_run": "/Users/mac/Desktop/more than a hack/more-than-a-hack-2027/outputs/context25-three-model-comparison",
+  "destination": "/Users/mac/Desktop/more than a hack/more-than-a-hack-2027/outputs/simulacoes/tracking-gabarito-contexto25-goleiro-verificado",
+  "profiles": [
+    "anterior",
+    "contexto",
+    "coletivo"
+  ],
+  "start_frame": 11185,
+  "end_frame_exclusive": 14185,
+  "fps": 25,
+  "duration_s": 120.0,
+  "source_sha256": {
+    "protocol.json": "4a3b01bb3d3f5669ece87cef3f634fc818e31713146953d83c07c87deb4d7c62",
+    "summary.json": "efb02b1152bcfbebc49d7962e8f7fc3bd774e00608fd677816f3fc813b0429e8",
+    "reference-sha256.json": "53e1d6a7065f1a2a08489ecaf274252964390b55a1a75a239005d46fcce3e9a9",
+    "anterior/result.json": "93ebc4c76770b645cb8aa806de384a4a2fe97557312dc4fc5a1d3614480a89a1",
+    "contexto/result.json": "ae558a69c64b95182588479596d39e59860be30a6b8c76f955e90feb9810079b",
+    "coletivo/result.json": "5e65ccaed8efed4a22b1611b9b44363c0dcd3e2a7c2184c2fa5f161962d55526"
+  },
+  "input_sha256": {
+    "atd_meta": "327e35e32e46a647389b88f883d4f9a2ab931e3e6148aef2fcf8f22b1e93c43a",
+    "atd_raw": "f130e350d2bfdf734b7e32f072931fccc6d015c1e837d082064875fe0a700431"
+  },
+  "reference_sha256": "e596a9af9626c623bb94be6fd350e12ee9a75c76a696cfadca3bc01735e92487",
+  "helper_sha256": "9ef6eba030b153b69a6a7fed7783c2e4af775b5cee503a19f44b489185f1091c",
+  "recomputed_model": false,
+  "video_file": "tracking-gabarito-anterior-vs-contexto-vs-coletivo.mp4",
+  "video_sha256": "11ba9251d726292a4d27bd119af4a4328518ee46068d04a1fbcae61905d533e8",
+  "ffprobe": {
+    "programs": [],
+    "stream_groups": [],
+    "streams": [
+      {
+        "width": 960,
+        "height": 1100,
+        "r_frame_rate": "25/1",
+        "nb_frames": "3000"
+      }
+    ],
+    "format": {
+      "duration": "120.000000"
+    }
+  }
+}

@@ -71,10 +71,15 @@ class CollectiveTests(unittest.TestCase):
         self.assertEqual(snapshots[-1]['metrics']['last_supported_control_age_s'],0)
         self.assertEqual(snapshots[-1]['metrics']['origin_support_fraction'],1)
 
-    def test_opponent_opportunity_does_not_flip_team(self):
+    def test_sustained_reception_precedes_rigid_control(self):
         snapshots,events,_,_=run(list(passing_frames(receiver=40,intercept=True)))
         acq=next(e for e in events if e['type']=='possible_control_acquisition' and e['team']=='A')
-        self.assertFalse(any(s['label']=='A' for s in snapshots[:acq['available_at_frame']]))
+        early=next(s for s in snapshots if s['label']=='A')
+        self.assertLess(early['frame'],acq['available_at_frame'])
+        self.assertEqual(early['reason'],'sustained_probable_reception')
+        self.assertTrue(all(early['reception']['checks'].values()))
+        self.assertIsNone(early['origin_event_id'])
+        self.assertFalse(early['released_acquisitions'])
         self.assertEqual(snapshots[acq['available_at_frame']]['label'],'A')
 
     def test_two_same_team_receivers_are_not_ambiguity(self):
