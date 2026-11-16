@@ -88,6 +88,12 @@ adjacente descreve sua janela e alinhamento. Os arquivos `baseline_raw.csv` e
 diferentes janelas de suavização — não são respostas verdadeiras. Preserve os originais e use
 `--out`/`--results` para experimentar em `outputs/`.
 
+## Submissão da equipe (frente 4)
+
+`python -m src.frente4 run --out outputs/submissions/frente4.csv` gera o CSV a partir do ATD, do
+Smart Tagging e, opcionalmente, dos eventos da frente 5. Regras, parâmetros e pendências em
+[FRENTE4-POSSE.md](FRENTE4-POSSE.md).
+
 ## Tutoriais
 
 1. [01_smart_tagging.ipynb](../notebooks/01_smart_tagging.ipynb): eventos, códigos, tags, N/A e tempos.

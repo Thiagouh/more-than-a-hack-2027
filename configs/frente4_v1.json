@@ -1,0 +1,27 @@
+{
+  "_comentario": "Parâmetros iniciais da frente 4. Hipóteses de futebol, não ajustadas na janela pública. Frames a 25 fps.",
+
+  "control_radius_m": 3.0,
+  "contested_margin_m": 0.5,
+  "near_radius_m": 5.0,
+  "max_control_speed_mps": 10.0,
+
+  "min_switch_frames": 12,
+  "max_gap_frames": 5,
+  "restart_confirm_frames": 3,
+  "min_dead_frames": 5,
+
+  "out_margin_m": 0.5,
+  "out_min_frames": 3,
+  "min_dead_after_trigger_frames": 25,
+  "max_dead_frames": 2250,
+  "restart_speed_mps": 3.0,
+  "use_set_piece_tags": true,
+  "use_stillness": true,
+  "still_speed_mps": 0.5,
+  "still_frames": 100,
+  "restart_hint_frames": 50,
+
+  "event_hold_frames": 12,
+  "event_min_strength": "medium"
+}

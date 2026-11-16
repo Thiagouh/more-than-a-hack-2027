@@ -9,3 +9,9 @@ e a avaliação oficial está em [evaluation/](../docs/GUIA-PROJETO.md#código-e
 ## Frente 5
 
 `ball_events/` implementa evidências de bola, contrato de eventos v2, fila temporal de teste e ferramentas locais de validação. Consulte [o guia](../docs/FRENTE5-EVENTOS.md). Não implementa posse final.
+
+## Frente 4
+
+`frente4/` lê o ATD uma vez (cache NumPy), calcula features, aplica as regras de D e a máquina de
+estados de posse e escreve o CSV da submissão: `python -m src.frente4 run`. Também refaz o baseline
+da organização byte a byte. Consulte [o guia](../docs/FRENTE4-POSSE.md).

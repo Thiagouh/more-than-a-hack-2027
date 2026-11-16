@@ -26,6 +26,20 @@ explore the approach and build on our findings.
 For now, the repository contains the challenge's starter code and evaluation
 tools. Our own solution and results will be added as the project progresses.
 
+## Generating a submission (frente 4)
+
+With the gated data bundle unpacked in `data/tactical/` (see [docs/DADOS-LOCAIS.md](docs/DADOS-LOCAIS.md)):
+
+```bash
+python -m pip install -r requirements-lock.txt
+python -m src.frente4 run --out outputs/submissions/frente4.csv
+python evaluation/validate_submission.py outputs/submissions/frente4.csv
+```
+
+The possession rules, dead-ball rules and parameters are documented in
+[docs/FRENTE4-POSSE.md](docs/FRENTE4-POSSE.md). `python -m src.frente4 baseline` regenerates the
+organisers' four baselines byte for byte as a check of the data pipeline.
+
 ## Background and acknowledgements
 
 This work builds on the official
