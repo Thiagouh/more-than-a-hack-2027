@@ -101,6 +101,20 @@ class StateMachineTests(unittest.TestCase):
         event_team = events_to_team_array(events, len(cand), hold_frames=4)
         self.assertEqual(labels(self.run_fsm(cand, event_team=event_team)), "H" * 6 + "A" * 8)
 
+    def test_events_adapter_reads_v2_fixture_and_filters_strength(self):
+        import json
+        fx = json.load(open(os.path.join(ROOT, "tests", "fixtures", "ball_events", "causal-v2.json"),
+                            encoding="utf-8"))
+        events = fx["expected_events"]
+        n = fx["manifest"]["n_frames"]
+        arr = events_to_team_array(events, n, hold_frames=12, min_strength="low")
+        acquisitions = [e for e in events if e["type"] == "possible_control_acquisition"]
+        self.assertEqual(len(acquisitions), 2)
+        for e in acquisitions:
+            self.assertEqual(arr[e["event_frame"]], {"H": H, "A": A}[e["team"]])
+        weak = [dict(e, strength="low") for e in acquisitions]
+        self.assertTrue((events_to_team_array(weak, n, 12, "medium") == N).all())
+
     def test_summary_counts_spells_inside_blocks(self):
         codes = np.array([CODE_X, CODE_H, CODE_H, CODE_A, CODE_D, CODE_A, CODE_X], np.int8)
         s = summarize(codes, [(1, 5)], fps=1)

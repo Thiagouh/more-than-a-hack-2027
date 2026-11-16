@@ -49,8 +49,10 @@ eventos v2 (frente 5) ──pipeline.events_to_team_array──> event_team[] �
 **e** a bola corre a menos de `max_control_speed_mps` (10 m/s). Em qualquer outro caso o frame
 não tem candidato: bola ausente, bola solta, bola disputada e bola em voo não trocam posse.
 
-Quando a frente 5 entrega `events.jsonl`, cada `possible_control_acquisition` com time vira
-candidato forte por `event_hold_frames` (12) frames, sobrepondo o candidato geométrico.
+Quando a frente 5 entrega `events.jsonl`, cada `possible_control_acquisition` com time e força
+`>= event_min_strength` (medium) vira candidato forte por `event_hold_frames` (12) frames,
+sobrepondo o candidato geométrico. O adaptador foi conferido contra a fixture oficial
+`tests/fixtures/ball_events/causal-v2.json`.
 
 ## Máquina de estados (`fsm.py`)
 

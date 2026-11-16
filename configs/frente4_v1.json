@@ -22,5 +22,6 @@
   "still_frames": 100,
   "restart_hint_frames": 50,
 
-  "event_hold_frames": 12
+  "event_hold_frames": 12,
+  "event_min_strength": "medium"
 }

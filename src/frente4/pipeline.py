@@ -38,13 +38,20 @@ def graded_blocks(game=GAME):
     return [(first, last) for _, first, last in half_video_blocks(game)]
 
 
-def events_to_team_array(events, n_frames, hold_frames=12):
+STRENGTH = {"low": 0, "medium": 1, "high": 2}
+
+
+def events_to_team_array(events, n_frames, hold_frames=12, min_strength="medium"):
     """Eventos v2 da frente 5 -> int8[n] com o time de cada aquisição de controle confirmada,
-    mantido por hold_frames a partir de event_frame. -1 onde não há evento."""
+    mantido por hold_frames a partir de event_frame. -1 onde não há evento.
+    Só entram aquisições com força >= min_strength (low/medium/high, ordinal)."""
     out = np.full(n_frames, NOBODY, dtype=np.int8)
     code = {"H": 0, "A": 1}
+    floor = STRENGTH.get(min_strength, 0)
     for e in events:
         if e.get("type") != "possible_control_acquisition" or e.get("team") not in code:
+            continue
+        if STRENGTH.get(e.get("strength", "high"), 2) < floor:
             continue
         start = int(e["event_frame"])
         out[max(0, start):min(n_frames, start + hold_frames)] = code[e["team"]]
@@ -85,7 +92,8 @@ def build_labels(tr, tags=(), cfg=None, events=None, game=GAME):
                                        {k: v for k, v in cfg.items() if k in deadball.DEFAULTS})
     event_team = None
     if events:
-        event_team = events_to_team_array(events, tr["n_frames"], cfg.get("event_hold_frames", 12))
+        event_team = events_to_team_array(events, tr["n_frames"], cfg.get("event_hold_frames", 12),
+                                          cfg.get("event_min_strength", "medium"))
     codes = possession_labels(candidates(feat, cfg), dead["dead"], blocks, Params.from_dict(cfg),
                               hint_team=dead["hint_team"], event_team=event_team)
     diag = dict(summary=summarize(codes, blocks, tr["fps"]),
