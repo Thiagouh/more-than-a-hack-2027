@@ -137,9 +137,20 @@ class CollectiveModel:
     Inputs may contain delayed points. Entire metric records are queued by their
     dependency availability; a late historical row never overwrites a newer row.
     """
-    def __init__(self, meta, detector_config=None, collective_config=None, hints=(), kickoffs=(), tracking_review=None):
+    def __init__(self, meta, detector_config=None, collective_config=None, hints=(), kickoffs=(), tracking_review=None, team_identity=None):
         self.meta=c.manifest(copy.deepcopy(meta))
         self.tracking_review=tracking_review
+        self.team_identity=team_identity
+        if tracking_review is not None and team_identity is not None:
+            raise ValueError('Use either the legacy tracking review or the visual identity overlay')
+        if team_identity is not None:
+            self.meta['producers']['visual-identity']='team-identity-v1'
+            # Entering/leaving the corrected input stream invalidates old raw-slot
+            # control/motion memory, without changing any original frame indices.
+            keys=set(team_identity)
+            boundaries={f for f in keys if f-1 not in keys}|{f+1 for f in keys if f+1 not in keys}
+            self.meta['continuity_starts']=sorted(set(self.meta.get('continuity_starts',[]))|
+                {f for f in boundaries if 0<f<self.meta['n_frames']})
         self.kickoffs=validate_kickoffs(kickoffs,self.meta)
         self.visual_control=VisualControl(self.meta)
         self.kickoff_prior=None
@@ -147,8 +158,8 @@ class CollectiveModel:
         self.reception=None;self.reception_previous=None;self.reception_support=None
         self.cfg=configuration(collective_config,meta['fps'])
         self.temporal_context=TemporalContext(self.cfg['context_frames'],self.cfg['context_recent_frames'])
-        self.detector=Detector(meta,detector_config,hints)
-        self.measurements=Measurements(meta,self.cfg)
+        self.detector=Detector(self.meta,detector_config,hints)
+        self.measurements=Measurements(self.meta,self.cfg)
         self.pending=[];self.serial=0;self.latest=None;self.history={}
         self.origin=None;self.origin_event=None;self.last_supported=None;self.release=None;self.last_control_support=None
         self.watermark=(-1,-1);self.invalid_before=0;self.unavailable_run=0;self.gap_start=None
@@ -162,6 +173,11 @@ class CollectiveModel:
     def feed(self, envelope, visual_observations=(), game_evidence=(), recovered_observations=()):
         c.envelope(envelope)
         envelope,tracking_diagnostics=apply_tracking_review(envelope,self.tracking_review)
+        from ..team_identification.overlay import apply_overlay
+        envelope,identity_display=apply_overlay(envelope,
+            self.team_identity.get(envelope['frame']) if self.team_identity is not None else None,self.meta['pitch_m'])
+        if identity_display is not None and (recovered_observations or visual_observations):
+            raise ValueError('Legacy visual packages cannot be combined with a visual identity overlay frame')
         previous_label=self.last_label
         from .recovery import apply_recoveries
         recovered_players,recovery_diagnostics=apply_recoveries(recovered_observations,envelope,self.meta)
@@ -485,6 +501,7 @@ class CollectiveModel:
             kickoff=kickoff_diagnostic,kickoff_opening_prior=copy.deepcopy(self.kickoff_prior),reception=recovery,visual_control=visual,
             game_state=game,pass_continuity=continuity,recovered_observations=recovery_diagnostics,
             temporal_context=context,tracking_review=tracking_diagnostics,
+            team_identity_players=identity_display,
             transition=dict(previous_label=previous_label,label=label,changed=previous_label!=label,reason=reason,
                 game_evidence_ids=[r['evidence_id'] for r in game_evidence if r['frame']==f and r['available_at_frame']<=f]),
             experimental=True,probabilities_calibrated=False)

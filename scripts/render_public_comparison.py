@@ -66,7 +66,9 @@ def main():
     while draw.textlength(heading,font=font(heading_size))>width-48 and heading_size>14:heading_size-=1
     draw.text((24,16),heading,font=font(heading_size),fill='#18333e')
     status = protocol.get('integration_status')
-    if status and status.get('sam3_executed'):
+    if status and status.get('team_identity_applied'):
+        subtitle='Equipes visuais | identidades locais | cinza: time incerto | mesmas observacoes usadas na posse'
+    elif status and status.get('sam3_executed'):
         mode='bola nas maos revisada' if status.get('visual_control_evidence_modes')==['reviewed_held_ball'] else 'controle experimental'
         subtitle=(f"SAM: {status.get('visual_observation_frames',0)} controles / {status.get('recovery_frames',0)} recuperacoes | revisao offline | base ATD"
                   if status.get('recovery_frames') else f"Piloto SAM 3: {status.get('visual_observation_frames',0)} frames | {mode} | demais equipes: ATD")
@@ -127,7 +129,11 @@ def main():
                 roles={r['track_id']:r for r in review if r['action']=='goalkeeper_role'}
                 corrections={r['target_track_id']:r for r in (telemetry or {}).get('recovered_observations',[])
                              if r.get('status')=='accepted_team_correction'}
-                for raw_point in envelope['players']:
+                identity_players=(telemetry or {}).get('team_identity_players')
+                if identity_players is not None:
+                    from src.team_identification.render import draw_identities
+                    draw_identities(draw,identity_players,f,meta['pitch_m'],project,body)
+                for raw_point in ([] if identity_players is not None else envelope['players']):
                     p=dict(raw_point)
                     if p['track_id'] in corrections:p['team']=corrections[p['track_id']]['team']
                     if render_status(p,f,meta['pitch_m']) not in ('drawn','drawn_with_quality_warning'):continue
@@ -146,7 +152,7 @@ def main():
                             draw.text((x+10 if x<left+pw/2 else x-45,y-12),'G-'+p['team'],font=body,fill='white')
                             continue
                         draw.ellipse((x-6,y-6,x+6,y+6),fill=colors[p['team']],outline='#ff00ff' if p['track_id'] in corrections else 'white',width=2 if p['track_id'] in corrections else 1)
-                if telemetry:
+                if telemetry and identity_players is None:
                     for recovered in telemetry.get('recovered_observations',[]):
                         if recovered.get('status')!='accepted':continue
                         x,y=project(recovered['pitch_xy'])

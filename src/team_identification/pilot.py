@@ -203,13 +203,15 @@ class Sam3:
         if len(masks)!=len(scores) or not np.isfinite(scores).all():raise ValueError('Invalid SAM outputs')
         return masks,scores
 
-    def segment_boxes(self, image, boxes, context_crop=False):
+    def segment_boxes(self, image, boxes, context_crop=False, context_scale=3.):
         """Return the best mask for each reviewed box, independently."""
+        if not np.isfinite(context_scale) or context_scale < 1:
+            raise ValueError('Context scale must be finite and >= 1')
         masks, scores = [], []
         for box in boxes:
             if context_crop:
                 x0,y0,x1,y1=box
-                side=3*max(x1-x0,y1-y0)
+                side=context_scale*max(x1-x0,y1-y0)
                 cx,cy=(x0+x1)/2,(y0+y1)/2
                 left,top=max(0,int(cx-side/2)),max(0,int(cy-side/2))
                 right,bottom=min(image.width,int(cx+side/2)),min(image.height,int(cy+side/2))

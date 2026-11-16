@@ -50,6 +50,7 @@ def main():
     parser.add_argument('--game-evidence',type=Path)
     parser.add_argument('--recovered-observations',type=Path)
     parser.add_argument('--tracking-review',type=Path)
+    parser.add_argument('--team-identity',type=Path,help='Frozen-reference visual team overlay; replaces legacy tracking review/recoveries')
     args=parser.parse_args()
     previous_protocol=json.loads((args.baseline/'protocol.json').read_text())
     start,end=previous_protocol['start_frame'],previous_protocol['end_frame_exclusive']
@@ -81,6 +82,23 @@ def main():
                 files['recovery_homography']=path.parent/package['homography_file']
                 for i,r in enumerate(package[kind]):files[f'recovery_proposal_{i}']=path.parent/r['proposal_package']
     tracking_review=None
+    team_identity=None
+    identity_package=None
+    if args.team_identity:
+        if args.tracking_review or args.recovered_observations or args.visual_observations:
+            parser.error('--team-identity replaces legacy tracking review, recovery and visual-control packages')
+        from src.team_identification.overlay import load_overlay
+        original_meta=dict(meta,n_frames=n_original)
+        team_identity,identity_package=load_overlay(args.team_identity,original_meta,args.visual_video,
+            files['atd_raw'],args.data_dir/'tactical/BAR-ATH_tactical_homography.csv')
+        if identity_package['start_frame']>start or identity_package['end_frame_exclusive']<end:
+            raise ValueError('Team identity overlay must cover the comparison window')
+        if identity_package.get('atd_meta_sha256')!=sha(files['atd_meta']):
+            raise ValueError('Team identity metadata differs')
+        files['team_identity']=args.team_identity
+        files['team_identity_observations']=args.team_identity.parent/identity_package['observations']
+        key='supervised_model' if identity_package.get('supervised_model') else 'frozen_references'
+        files['team_identity_references']=args.team_identity.parent/identity_package[key]
     if args.tracking_review:
         tracking_review=load_tracking_review(args.tracking_review,meta,args.visual_video)
         files['tracking_review']=args.tracking_review
@@ -106,7 +124,7 @@ def main():
               ('reaction_0_3s',{'reaction_time_s':.3}),('speed_6mps',{'max_speed_mps':6.}),('speed_10mps',{'max_speed_mps':10.})]
     protocol=dict(kickoffs=kickoffs,kickoff_status='provided' if kickoffs else 'missing_or_unusable',start_frame=start,end_frame_exclusive=end,original_n_frames=n_original,fps=meta['fps'],
         loss_frames=3,missing_ball_grace_frames=5,profiles=['anterior','coletivo'],
-        model_names={'anterior':'Anterior (v4)','coletivo':'Contexto 25 + goleiro'},
+        model_names={'anterior':'Anterior (v4)','coletivo':'Equipes visuais' if team_identity is not None else 'Contexto 25 + goleiro'},
         comparison_source=str(args.comparison_run) if args.comparison_run else None,
         collective_configuration=cfg,detector_configuration=detector_cfg,
         parameters_calibrated=False,parameter_selection_on_public_reference=False,
@@ -114,9 +132,10 @@ def main():
         synthetic_references=[{k:v for k,v in case.items() if k!='frames'} for case in examples],
         provenance=provenance,metrics_version=METRICS_VERSION,policy_version=POLICY_VERSION,
         hypothesis='Preserve a known team through plausible observed passes; predicted interception does not confirm turnover.',
-        integration_status=dict(team_source='ATD metadata',sam3_executed=bool(args.visual_observations),
+        integration_status=dict(team_source='visual identity overlay' if team_identity is not None else 'ATD metadata',sam3_executed=bool(args.visual_observations) or team_identity is not None,
+            team_identity_applied=team_identity is not None,team_identity_package=identity_package,
             goalkeeper_context_applied=any(r['classification_method']=='sam3_goalkeeper_context' for rows in visual_rows.values() for r in rows),
-            visual_reference_bundle_frozen=False,visual_observation_frames=len(visual_rows),
+            visual_reference_bundle_frozen=team_identity is not None,visual_observation_frames=len(visual_rows),
             game_evidence_frames=len(evidence_rows),recovery_frames=len(recovered_rows),tracking_quality_review_applied=tracking_review is not None,
             temporal_context_frames=cfg['context_frames'],
             evidence_latency='offline reviewed; declared frame availability is not measured live latency',
@@ -130,8 +149,8 @@ def main():
     for name,overrides in variants:
         synthetic[name]={case['name']:synthetic_case(case,overrides) for case in examples}
     write_json(args.out/'synthetic.json',synthetic)
-    model=CollectiveModel(meta,detector_cfg,cfg,hints,kickoffs=kickoffs,tracking_review=tracking_review)
-    raw_detector=Detector(meta,detector_cfg,hints) if tracking_review else None
+    model=CollectiveModel(meta,detector_cfg,cfg,hints,kickoffs=kickoffs,tracking_review=tracking_review,team_identity=team_identity)
+    raw_detector=Detector(meta,detector_cfg,hints) if tracking_review is not None or team_identity is not None else None
     raw_events=[]
     labels=[];states=[];events=[];visible=[]
     print(f'Processing real tracking prefix 0..{end-1}',flush=True)

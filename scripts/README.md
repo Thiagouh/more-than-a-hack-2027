@@ -1,5 +1,9 @@
 # Ferramentas locais
 
+O fluxo de identificação visual de equipes (revisão de uniformes, associação,
+continuidade, avaliação e integração à posse) está em
+[IDENTIFICACAO-EQUIPES.md](../docs/IDENTIFICACAO-EQUIPES.md).
+
 `verificar_dados.py` confere se os arquivos esperados existem e não estão vazios, usando os
 mesmos caminhos de `games.py`. Não depende de numpy, pandas ou kloppy e não baixa nem altera assets.
 

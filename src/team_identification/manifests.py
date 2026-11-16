@@ -46,8 +46,8 @@ def label(row):
 
 
 def validate_initial(spec, image):
-    if spec.get('source') not in ('broadcast', 'broadcast-screen-capture'):
-        raise ValueError('Broadcast pixels required')
+    if spec.get('source') not in ('broadcast', 'broadcast-screen-capture', 'tactical'):
+        raise ValueError('Explicit broadcast or tactical pixels required')
     if type(spec.get('reviewed')) is not bool:
         raise ValueError('reviewed must be boolean')
     rows = spec['initial_annotations']
