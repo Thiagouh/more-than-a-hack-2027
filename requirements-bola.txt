@@ -1,0 +1,9 @@
+# Frente 2 (src/bola/). Além de numpy e pandas (requirements.txt):
+-r requirements.txt
+
+scikit-learn          # modelo A (src/bola/modelo.py)
+opencv-python-headless  # vídeo de análise e detector (src/bola/video_analise.py, detector.py)
+
+# Só para o experimento do detector (src/bola/detector.py). Em CPU, instale o torch antes:
+#   pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu
+# ultralytics

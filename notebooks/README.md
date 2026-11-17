@@ -19,3 +19,9 @@ apresentar resultados de uma execução anterior como atuais.
 
 Comparações com o ground truth público nos exemplos servem para compreender e verificar o
 pipeline. Não escolher versões ou ajustar parâmetros a partir dessas notas.
+
+Notebooks da equipe:
+
+4. [Vídeo, tracking e homografia](04_video_tracking_homography.ipynb): sobreposição do tracking no vídeo tático.
+5. [Detector de bola](05_detector_bola_colab.ipynb): YOLO pré-treinado nos buracos da bola, para o
+   Colab com GPU (frente 2; código em `src/bola/detector.py`).
