@@ -378,3 +378,23 @@ aceitos e cobertura de 89,7%. As exclusões ocorreram após a rotulagem; estes
 resultados são exploratórios e não validam tracking automático na partida.
 Os modelos, imagens e relatórios gerados continuam locais em `outputs/`, fora
 do Git, conforme as regras do repositório.
+
+### Desempenho — auditoria local após a seleção da política
+
+A análise espacial agora calcula a sobreposição das máscaras uma vez por frame,
+restringe interseções e erosão à região efetiva da pessoa e evita conversões e
+validações redundantes de máscaras booleanas. Não altera limiares nem observações.
+A equivalência foi conferida em 20 frames reais consecutivos, com saídas completas
+idênticas, além dos testes de invariância de recorte/bordas e exclusão de valores
+inválidos. A etapa CPU caiu de 2,025 para 0,561 s/frame (3,61x) neste Mac M1.
+
+Isso **não** significa 3,61x na execução inteira: SAM completo ainda consumiu cerca
+de nove segundos por frame em uma medição de dois frames. Não houve demonstração
+de tempo real ou medição final de posse. A execução longa foi pausada para esta
+auditoria; dados parciais permanecem locais em `outputs/`. O relatório está em
+`outputs/identity-performance-audit-20261116/relatorio.md`.
+
+Para processar 90 minutos, o caminho proposto é detecção leve + tracking causal
+por frame + classificação nos quatro instantes reais, com SAM pontual e cache
+verificado. Essa arquitetura ainda precisa ser implementada e validada quanto
+a trocas de identidade e acurácia; não substituir silenciosamente o método atual.

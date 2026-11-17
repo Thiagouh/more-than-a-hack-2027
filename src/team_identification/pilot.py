@@ -19,9 +19,9 @@ def sha256(path):
 
 def binary_mask(mask, shape):
     mask = np.asarray(mask)
-    if mask.shape != shape or mask.dtype.kind not in 'buif' or not np.isin(mask, [0, 1, 255]).all():
+    if mask.shape != shape or mask.dtype.kind not in 'buif' or (mask.dtype.kind != 'b' and not np.isin(mask, [0, 1, 255]).all()):
         raise ValueError('Expected binary mask matching image dimensions')
-    return mask != 0
+    return mask if mask.dtype.kind == 'b' else mask != 0
 
 
 def mask_stack(masks, shape):
@@ -77,8 +77,15 @@ def torso_evidence(image, mask, excluded=None, *, return_mask=False):
         return None, quality, 'small_mask'
     if w/h > .85:
         return None, quality, 'merged_or_non_upright_mask'
+    # Outside this tight box the original mask is identically false. Erosion
+    # with false padding is therefore exactly equivalent on the smaller array.
+    original_shape=mask.shape
+    bounds=(x0,y0,x1,y1)
+    image=image[y0:y1,x0:x1]
+    mask=mask[y0:y1,x0:x1]
+    excluded=excluded[y0:y1,x0:x1]
     torso = np.zeros_like(mask)
-    torso[y0+int(.2*h):y0+int(.55*h),x0+int(.2*w):x0+int(.8*w)] = True
+    torso[int(.2*h):int(.55*h),int(.2*w):int(.8*w)] = True
     torso &= mask
     radius = max(1, int(np.ceil(.05*w)))
     core = torso & interior_mask(mask, radius)
@@ -91,7 +98,10 @@ def torso_evidence(image, mask, excluded=None, *, return_mask=False):
     if count < 24 or quality['valid_torso_fraction'] < .5:
         return None, quality, 'insufficient_torso'
     if return_mask:
-        return valid, quality, None
+        full=np.zeros(original_shape,dtype=bool)
+        x0,y0,x1,y1=bounds
+        full[y0:y1,x0:x1]=valid
+        return full, quality, None
     return pixel_histogram(image[valid]), quality, None
 
 
@@ -102,9 +112,17 @@ def descriptor(image, mask, excluded=None):
 def mask_flags(masks):
     flags = [None] * len(masks)
     areas = [int(m.sum()) for m in masks]
+    bounds=[]
+    for mask in masks:
+        ys,xs=np.nonzero(mask)
+        bounds.append((int(xs.min()),int(ys.min()),int(xs.max()+1),int(ys.max()+1)) if len(xs) else None)
     for i in range(len(masks)):
         for j in range(i):
-            intersection = int((masks[i] & masks[j]).sum())
+            if bounds[i] is None or bounds[j] is None:continue
+            left=max(bounds[i][0],bounds[j][0]);top=max(bounds[i][1],bounds[j][1])
+            right=min(bounds[i][2],bounds[j][2]);bottom=min(bounds[i][3],bounds[j][3])
+            if left>=right or top>=bottom:continue
+            intersection = int((masks[i][top:bottom,left:right] & masks[j][top:bottom,left:right]).sum())
             if not min(areas[i], areas[j]):
                 continue
             if intersection / (areas[i]+areas[j]-intersection) >= .85:

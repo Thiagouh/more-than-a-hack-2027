@@ -50,8 +50,10 @@ class IdentityPipeline:
             stack=np.asarray(masks,dtype=bool) if masks else np.zeros((0,image.height,image.width),bool)
             flags=mask_flags(stack) if masks else []
             classifications=[]
+            overlap=stack.sum(axis=0)>1
+            rgb=np.asarray(image)
             for i,mask in enumerate(masks):
-                _,_,reason=torso_evidence(image,mask,stack.sum(axis=0)>1)
+                _,_,reason=torso_evidence(rgb,mask,overlap)
                 classifications.append(dict(detection_index=i,team=None,role='unknown',classification='uncertain',
                     reason=flags[i] or reason or 'pending_four_frame_uniforms'))
         else:

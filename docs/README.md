@@ -1,5 +1,15 @@
 # Documentação
 
+## Revisão com os mentores
+
+- [Implementações e resultados](IMPLEMENTACOES-PARA-MENTORES.md): estado atual do
+  código, arquitetura, resultados medidos, testes e instruções de reprodução.
+- [Desafios e decisões em aberto](DESAFIOS-PARA-MENTORES.md): gargalos, limites da
+  avaliação e proposta ainda não implementada de detector leve com SAM seletivo.
+
+Estes dois documentos consolidam o estado atual. Os guias de experimentos
+preservam etapas históricas e podem descrever limitações de versões anteriores.
+
 ## Começar
 
 - [Guia do projeto em português](GUIA-PROJETO.md): explicação consolidada dos materiais fornecidos.
