@@ -4,7 +4,7 @@
 
 - [Implementações e resultados](IMPLEMENTACOES-PARA-MENTORES.md): estado atual do
   código, arquitetura, resultados medidos, testes e instruções de reprodução.
-- [Desafios e decisões em aberto](DESAFIOS-PARA-MENTORES.md): gargalos, limites da
+- [Desafios e pontos de definição](DESAFIOS-E-PONTOS-DE-DEFINICAO.md): gargalos, limites da
   avaliação e proposta ainda não implementada de detector leve com SAM seletivo.
 
 Estes dois documentos consolidam o estado atual. Os guias de experimentos

@@ -12,7 +12,7 @@ gostaríamos de discutir:
 
 - [Implementações e resultados](docs/IMPLEMENTACOES-PARA-MENTORES.md): arquitetura,
   política de quatro frames em 0,6 segundo, avaliações, otimizações e reprodução.
-- [Desafios e decisões em aberto](docs/DESAFIOS-PARA-MENTORES.md): desempenho para
+- [Desafios e pontos de definição](docs/DESAFIOS-E-PONTOS-DE-DEFINICAO.md): desempenho para
   90 minutos, identidade, detector leve, SAM seletivo e protocolo de validação.
 
 O detector leve com SAM seletivo ainda é uma proposta. A nova acurácia de posse

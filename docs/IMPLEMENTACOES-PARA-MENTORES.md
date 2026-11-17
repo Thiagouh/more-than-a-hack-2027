@@ -1,6 +1,6 @@
 # Implementações — material para revisão dos mentores
 
-**Retrato do projeto em 16/11/2026.** Este documento descreve código existente e resultados locais já produzidos. As hipóteses de evolução, riscos e decisões em aberto estão em [Desafios para os mentores](DESAFIOS-PARA-MENTORES.md). O objetivo é permitir revisão técnica sem precisar reconstruir o histórico das conversas.
+**Retrato do projeto em 16/11/2026.** Este documento descreve código existente e resultados locais já produzidos. As hipóteses de evolução, riscos e decisões em aberto estão em [Desafios e pontos de definição](DESAFIOS-E-PONTOS-DE-DEFINICAO.md). O objetivo é permitir revisão técnica sem precisar reconstruir o histórico das conversas.
 
 ## 1. Objetivo e situação atual
 
@@ -220,4 +220,4 @@ Os arquivos abaixo são **locais e ignorados pelo Git**. Seus hashes identificam
 | Avaliação final da rodada 11 (`comparison.json`) | `0869f8a59904f5d3431d15b2103cd363b85f355446cc1fe9931378155e73c4a3` |
 | Posse anterior (`collective-context25-goalkeeper-v5/summary.json`) | `bbe6689692e7874ce8eaff706a484eb7b78619705e81dd9507eef8a1e14f789f` |
 
-Detalhes históricos e comandos adicionais estão em [Identificação de equipes](IDENTIFICACAO-EQUIPES.md). A lista de decisões que gostaríamos de discutir está no [documento de desafios](DESAFIOS-PARA-MENTORES.md).
+Detalhes históricos e comandos adicionais estão em [Identificação de equipes](IDENTIFICACAO-EQUIPES.md). A lista de decisões que gostaríamos de discutir está no [documento de desafios](DESAFIOS-E-PONTOS-DE-DEFINICAO.md).
