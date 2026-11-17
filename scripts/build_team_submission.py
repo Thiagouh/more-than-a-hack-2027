@@ -24,6 +24,7 @@ def main():
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--data-dir',type=Path,default=Path('data'))
     parser.add_argument('--out-dir',type=Path,required=True)
+    parser.add_argument('--ball-quality',action='store_true',help='Explicit physics-only filtering experiment; no learned model')
     args=parser.parse_args()
     if args.out_dir.exists():raise ValueError('Use a new output directory')
     inputs=require(['atd_meta','atd_raw','smart_tagging'],GAME,args.data_dir)
@@ -31,7 +32,8 @@ def main():
     code=[Path(__file__),Path('games.py'),Path('starter/load_smart_tagging.py'),
           *sorted(Path('src/frente4').glob('*.py'))]
     source_hashes={str(p):sha(p) for p in [*map(Path,inputs),config,*code]}
-    provenance=dict(status='started',method='frente4-frozen-offline-rules',
+    provenance=dict(status='started',method='frente4-physics-quality-v1' if args.ball_quality else 'frente4-frozen-offline-rules',
+        ball_quality_enabled=args.ball_quality,
         team='La MasIA',upstream_commit='288d5a0a1aa37324850436188655ce777263b056',
         upstream_pr='https://github.com/Thiagouh/more-than-a-hack-2027/pull/1',
         ground_truth_used=False,training_on_provided_game=False,human_corrections=False,
@@ -43,7 +45,7 @@ def main():
     started=time.perf_counter()
     temporary=args.out_dir/'prediction.partial.csv'
     _,diagnostic=run(str(temporary),str(args.data_dir),str(config),
-                     cache_dir=str(args.out_dir/'cache'))
+                     cache_dir=str(args.out_dir/'cache'),ball_quality=args.ball_quality)
     reason=pm.validate_submission(pm.read_label_csv(temporary),GAMES[GAME]['n_video_frames'])
     if reason:raise ValueError(reason)
     if any(sha(p)!=digest for p,digest in source_hashes.items()):
