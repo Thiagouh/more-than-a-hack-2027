@@ -72,6 +72,16 @@ class BallQualityTests(unittest.TestCase):
         raw['n_frames']=4
         with self.assertRaises(ValueError):clean_ball_observations(raw)
 
+    def test_padding_duration_is_rescaled_for_external_ten_fps_tracking(self):
+        raw=tracking([[50,30]]*25,fps=25);raw['ball_xy'][10,0]=80
+        _,_,normal=clean_ball_observations(raw)
+        raw['fps']=10
+        _,_,external=clean_ball_observations(raw)
+        self.assertEqual(normal['effective_jump_padding_frames'],2)
+        self.assertEqual(external['effective_jump_padding_frames'],1)
+        self.assertEqual(normal['removed_observations'],7)
+        self.assertEqual(external['removed_observations'],5)
+
     def test_lost_outside_opens_d_until_observed_moving_restart(self):
         xy=np.full((80,2),np.nan,dtype=np.float32)
         xy[:3]=[[104,30],[104.5,30],[105.6,30]]

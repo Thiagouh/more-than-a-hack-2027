@@ -7,7 +7,7 @@ This is offline filtering, not a claim of causal availability.
 """
 import numpy as np
 
-DEFAULTS = dict(max_speed_mps=40.0, jump_padding_frames=2, outside_limit_m=5.0)
+DEFAULTS = dict(max_speed_mps=40.0, jump_padding_frames=2, reference_fps=25.0, outside_limit_m=5.0)
 
 
 def clean_ball_observations(tr, boundary_margin_m=.5):
@@ -32,7 +32,8 @@ def clean_ball_observations(tr, boundary_margin_m=.5):
         indices=np.flatnonzero(finite[1:]&finite[:-1]&(speed>DEFAULTS['max_speed_mps']))
         jump[indices]=True;jump[indices+1]=True
     original_jump=jump.copy()
-    for shift in range(1,DEFAULTS['jump_padding_frames']+1):
+    padding=max(1,round(DEFAULTS['jump_padding_frames']*fps/DEFAULTS['reference_fps']))
+    for shift in range(1,padding+1):
         jump[shift:]|=original_jump[:-shift]
         jump[:-shift]|=original_jump[shift:]
     removed=finite&(outside|jump)
@@ -47,6 +48,7 @@ def clean_ball_observations(tr, boundary_margin_m=.5):
     if len(xy)>1:starts[1:]=~kept[1:]&kept[:-1]&beyond[:-1]
     output=dict(tr,ball_xy=cleaned)
     summary=dict(method='physics-only-ball-quality-v1',parameters=dict(DEFAULTS),
+        effective_jump_padding_frames=padding,
         boundary_margin_m=float(boundary_margin_m),
         original_finite_observations=int(finite.sum()),kept_observations=int(kept.sum()),
         removed_observations=int(removed.sum()),partial_coordinate_frames=int(partial.sum()),

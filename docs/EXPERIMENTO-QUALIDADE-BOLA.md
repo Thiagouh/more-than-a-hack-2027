@@ -38,3 +38,23 @@ que a timeline é preservada e que duas gerações independentes coincidem.
 A regra física pode retirar um chute real acima do limiar. A posição fora das
 linhas também pode estar errada. Essas hipóteses serão explicitadas no relatório;
 não haverá revisão manual ou correção por frame.
+
+## Verificação externa predefinida
+
+Usar os três primeiros IDs, em ordem numérica, do repositório oficial SkillCorner
+Open Data: **1874553, 1886347 e 1899585**. Fonte congelada no commit
+`4340d274572876239c154c90bc507a9b3250a656`, licença MIT. A escolha é anterior à
+leitura dos rótulos e aos resultados desses jogos.
+
+O tracking é de transmissão, a 10 fps e com coordenadas centradas. Converter para
+coordenadas positivas com as dimensões de cada campo. A dilatação equivale a dois
+frames em 25 fps (0,08 s), reescalada ao fps com arredondamento e mínimo de um frame.
+Essa conversão não altera a execução de 25 fps da competição.
+
+Comparar cobertura e erros dos candidatos geométricos somente nos frames em que
+o fornecedor declara equipe em posse, antes e depois do filtro. Esses rótulos não
+são o gabarito da competição e não validam bola morta; não preencher lacunas de
+rótulos como se fossem verdade conhecida. Não treinar nem ajustar limiares nesta
+verificação. O teste externo é separado das contagens automáticas do jogo alvo.
+
+Fonte: [SkillCorner Open Data](https://github.com/SkillCorner/opendata).
