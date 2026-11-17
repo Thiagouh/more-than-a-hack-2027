@@ -8,18 +8,23 @@ this repository contains our implementation, experiments, and findings for revie
 ## Entrega La MasIA
 
 A entrega integra a Frente 4 de Vitor Rocha: tracking ATD, Smart Tagging, regras
-automáticas de bola morta e máquina de estados de posse. Não usa treinamento no
-jogo fornecido, correções humanas ou modelo supervisionado de uniformes. Método, resultados e limites estão no
+automáticas de bola morta e máquina de estados de posse. A versão integrada inclui
+filtragem física da bola e eventos automáticos de controle com suporte verificado.
+Não usa treinamento no jogo fornecido, correções humanas ou modelo supervisionado
+de uniformes. Método, resultados e limites estão no
 [documento técnico](docs/LA-MASIA-TECNICO.md).
 
 ```sh
 python3 -m venv .venv
 .venv/bin/python -m pip install -r requirements-lock.txt
-.venv/bin/python -m scripts.build_team_submission --out-dir outputs/la-masia-reproduction
+.venv/bin/python -m scripts.build_team_submission \
+  --ball-quality --include-control-events \
+  --out-dir outputs/la-masia-reproduction
 .venv/bin/python evaluation/validate_submission.py "outputs/la-masia-reproduction/La MasIA.csv"
 ```
 
-O diretório de saída deve ser novo. O pacote autorizado da partida deve estar em
+Sem as duas novas opções, o comando reproduz a referência inicial. O diretório
+de saída deve ser novo. O pacote autorizado da partida deve estar em
 `data/`; ele não é redistribuído. O arquivo final já é gerado com o nome `La MasIA.csv`.
 
 **Os experimentos históricos com uniformes rotulados neste jogo e evidências
