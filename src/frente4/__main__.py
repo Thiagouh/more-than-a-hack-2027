@@ -22,7 +22,7 @@ from . import pipeline  # noqa: E402
 
 def cmd_run(args):
     path, diag = pipeline.run(args.out, args.data_dir, args.config, args.events, args.cache_dir,
-                              bola_path=args.bola)
+                              bola_path=args.bola, deadball_path=args.deadball)
     s = diag["summary"]
     print("escrito {}".format(path))
     print("times: H={} A={}".format(diag["teams"]["H"], diag["teams"]["A"]))
@@ -80,6 +80,7 @@ def main(argv=None):
     p.add_argument("--events", help="events.jsonl v2 da frente 5 (opcional)")
     p.add_argument("--bola", help="sinal_bola.csv da frente 2 (opcional); 'auto' usa outputs/bola/sinal_bola.csv")
     p.add_argument("--cache-dir")
+    p.add_argument("--deadball", help="dead_ball_features.csv do detector Smart Tagging + bola morta (opcional)")
     p.set_defaults(func=cmd_run)
 
     p = sub.add_parser("baseline", help="refaz os quatro baselines e compara com evaluation/results")

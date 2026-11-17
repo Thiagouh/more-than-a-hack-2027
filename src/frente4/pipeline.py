@@ -112,7 +112,21 @@ def aplicar_sinal_bola(tr, sinal):
     return tr, starts
 
 
-def build_labels(tr, tags=(), cfg=None, events=None, game=GAME, sinal_bola=None):
+def ler_deadball_externo(path, n):
+    """CSV do detector de bola morta (dead_ball_features.csv) -> bool[n] com o início (retroativo)
+    de cada D confirmado. Só evidência; quem decide é a máquina de estados."""
+    import pandas as pd
+    t = pd.read_csv(path, usecols=["frame", "dead_ball_transition", "dead_ball_start_frame"])
+    if len(t) != n or not np.array_equal(t["frame"].to_numpy(), np.arange(n)):
+        raise ValueError("deadball externo: precisa ter uma linha por frame 0..{}".format(n - 1))
+    ok = t["dead_ball_transition"].fillna("") == "dead_ball_confirmed"
+    starts = np.zeros(n, dtype=bool)
+    idx = t.loc[ok, "dead_ball_start_frame"].dropna().astype(int).to_numpy()
+    starts[idx[(idx >= 0) & (idx < n)]] = True
+    return starts
+
+
+def build_labels(tr, tags=(), cfg=None, events=None, game=GAME, sinal_bola=None, ext_starts=None):
     cfg = cfg or {}
     hole_out = None
     if sinal_bola is not None:
@@ -122,7 +136,7 @@ def build_labels(tr, tags=(), cfg=None, events=None, game=GAME, sinal_bola=None)
     blocks = graded_blocks(game)
     dead = deadball.dead_ball_evidence(feat, blocks, KICKOFFS, GAMES[game]["pitch"], tags,
                                        {k: v for k, v in cfg.items() if k in deadball.DEFAULTS},
-                                       hole_out_starts=hole_out)
+                                       hole_out_starts=hole_out, ext_starts=ext_starts)
     event_team = None
     if events:
         event_team = events_to_team_array(events, tr["n_frames"], cfg.get("event_hold_frames", 12),
@@ -146,7 +160,8 @@ def _ler_sinal(path):
                               "posse_buraco": str, "posse_buraco_modelo": str, "saiu_campo": str})
 
 
-def run(out, data_dir=None, config_path=None, events_path=None, cache_dir=None, game=GAME, bola_path=None):
+def run(out, data_dir=None, config_path=None, events_path=None, cache_dir=None, game=GAME, bola_path=None,
+        deadball_path=None):
     from .atd import load_tracking
     from starter.load_smart_tagging import load as load_tags
 
@@ -158,10 +173,11 @@ def run(out, data_dir=None, config_path=None, events_path=None, cache_dir=None, 
     if bola_path:
         from src.bola.entrega import carregar_sinal
         sinal = carregar_sinal() if bola_path == "auto" else _ler_sinal(bola_path)
-    labels, diag = build_labels(tr, tags, cfg, events, game, sinal_bola=sinal)
+    ext = ler_deadball_externo(deadball_path, tr["n_frames"]) if deadball_path else None
+    labels, diag = build_labels(tr, tags, cfg, events, game, sinal_bola=sinal, ext_starts=ext)
     path = write_submission(out, labels)
     diag.update(teams=dict(H=tr["teams"][0], A=tr["teams"][1]), cache=tr["cache_path"],
-                config=config_path or DEFAULT_CONFIG, events=events_path, bola=bola_path)
+                config=config_path or DEFAULT_CONFIG, events=events_path, bola=bola_path, deadball=deadball_path)
     with open(os.path.splitext(out)[0] + ".diagnostico.json", "w", encoding="utf-8") as handle:
         json.dump(diag, handle, indent=2, ensure_ascii=False)
     return path, diag

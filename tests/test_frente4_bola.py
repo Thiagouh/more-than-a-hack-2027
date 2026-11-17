@@ -69,5 +69,19 @@ class DeadComBuracoFora(unittest.TestCase):
         self.assertFalse(sem["dead"].any())
 
 
+class DeadExterno(unittest.TestCase):
+    def test_inicio_externo_abre_d_ate_reposicao(self):
+        n = 100
+        x = np.full(n, 50.0, dtype=np.float32); y = np.full(n, 30.0, dtype=np.float32)
+        speed = np.zeros(n, dtype=np.float32); speed[70:] = 8.0
+        feat = dict(ball_observed=np.ones(n, bool), ball_x=x, ball_y=y, ball_speed=speed)
+        ext = np.zeros(n, dtype=bool); ext[20] = True
+        ev = deadball.dead_ball_evidence(feat, [(0, n - 1)], {1: 0}, (105.0, 68.0), (),
+                                         {"use_stillness": False}, ext_starts=ext)
+        self.assertTrue(ev["dead"][20:70].all())
+        self.assertFalse(ev["dead"][:20].any() or ev["dead"][70:].any())
+        self.assertEqual(ev["reason"][20], deadball.REASON_EXT)
+
+
 if __name__ == "__main__":
     unittest.main()

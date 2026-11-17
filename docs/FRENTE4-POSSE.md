@@ -144,3 +144,11 @@ Verificação em 17/11/2026 (conferência de integração, não ajuste; janela p
 `validate_submission.py` aprovou os dois CSVs; spellF1 0,4571 sem e com o sinal; macroF1 0,6819 → 0,7043.
 Na partida inteira: D por `ball_out_then_lost` em 2.950 frames, observada 56,9% → 54,8%. Os quatro
 baselines refeitos saíram idênticos aos oficiais. Nenhum CSV foi submetido.
+
+### Evidência externa de bola morta (`--deadball`)
+
+`--deadball outputs/deadball_bruno/dead_ball_features.csv` aceita o CSV do detector Smart Tagging + bola
+morta (overlay do Bruno da frente 3). Cada `dead_ball_confirmed` abre D no `dead_ball_start_frame`
+(retroativo); o fim continua sendo a reposição da máquina. Em 17/11, conferência de integração na janela
+pública: spellF1 0,4571 (igual) e macroF1 0,7043 → 0,7052. Ganho dentro do ruído de 17 posses; não é
+evidência de melhora. Nenhum CSV foi submetido.
