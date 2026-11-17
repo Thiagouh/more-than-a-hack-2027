@@ -4,9 +4,9 @@ import unittest
 import numpy as np
 from PIL import Image, ImageDraw, ImageFont
 from src.ball_events.demo import metadata, point
-from src.team_identification.association import associate, feet_to_pitch, LocalIdentities, _assignment
+from src.team_identification.association import associate, feet_to_pitch, LocalIdentities, ImageIdentities, _assignment
 from src.team_identification.temporal import TeamMemory
-from src.team_identification.overlay import apply_overlay
+from src.team_identification.overlay import apply_overlay, apply_team_corrections
 from src.team_identification.pipeline import IdentityPipeline
 from src.team_identification.render import draw_identities
 from src.team_possession.collective import CollectiveModel
@@ -26,6 +26,22 @@ def envelope(f=0):
 
 
 class AssociationTests(unittest.TestCase):
+    def test_image_identity_survives_small_box_motion_and_retires_ambiguous_crossing(self):
+        tracker=ImageIdentities()
+        ids=tracker.step(0,[[10,10,20,50],[40,10,50,50]])
+        moved=tracker.step(1,[[41,10,51,50],[11,10,21,50]])
+        self.assertEqual(ids,moved[::-1])
+        crossed=tracker.step(2,[[25,10,40,50],[25,10,40,50]])
+        self.assertTrue(set(ids).isdisjoint(crossed))
+        after_gap=tracker.step(4,[[25,10,40,50]])
+        self.assertTrue(set(crossed).isdisjoint(after_gap))
+
+    def test_image_ambiguity_cannot_pick_one_old_person_by_detection_order(self):
+        tracker=ImageIdentities()
+        old=tracker.step(0,[[10,10,30,50],[12,10,32,50]])
+        new=tracker.step(1,[[11,10,31,50],[11,10,31,50]])
+        self.assertTrue(set(old).isdisjoint(new))
+
     def test_global_assignment_matches_exhaustive_optimum(self):
         rng=np.random.default_rng(4)
         for n,m in [(1,3),(3,3),(3,5)]:
@@ -106,6 +122,27 @@ class MemoryTests(unittest.TestCase):
 
 
 class OverlayTests(unittest.TestCase):
+    def test_explicit_corrections_preserve_raw_slots_coordinates_and_unknowns(self):
+        raw=envelope();before=copy.deepcopy(raw)
+        corrected=apply_team_corrections(raw,observation(0),[105.3,68.])
+        self.assertEqual(raw,before)
+        self.assertEqual(corrected['players'][0]['team'],'A')
+        self.assertEqual(corrected['players'][0]['track_id'],'team-corrected:slot:A')
+        self.assertEqual(corrected['players'][0]['x_m'],raw['players'][0]['x_m'])
+        self.assertEqual(corrected['players'][0]['extensions']['team_source']['method'],'accepted_visual_correction')
+        uncertain=apply_team_corrections(raw,observation(0,team=None),[105.3,68.])
+        self.assertEqual(uncertain['players'][0]['team'],'H')
+        self.assertEqual(uncertain['players'][0]['extensions']['team_source']['method'],'provided_atd_metadata_unverified')
+
+    def test_corrections_do_not_recover_people_or_replay_late_evidence(self):
+        raw=envelope()
+        recovered=apply_team_corrections(raw,observation(0,target=None),[105.3,68.])
+        self.assertEqual(len(recovered['players']),1)
+        self.assertEqual(recovered['players'][0]['team'],'H')
+        late=observation(0);late['players'][0]['available_at_frame']=1
+        corrected=apply_team_corrections(raw,late,[105.3,68.])
+        self.assertEqual(corrected['players'][0]['team'],'H')
+
     def test_corrects_metadata_without_mutating_coordinates_or_raw(self):
         raw=envelope();before=copy.deepcopy(raw)
         corrected,display=apply_overlay(raw,observation(0),[105.3,68.])
@@ -182,6 +219,34 @@ class PipelineTests(unittest.TestCase):
     class Classifier:
         def classify(self,image,masks):
             return [dict(team='A',role='player',reason='uniform_match',classification='A') for _ in masks]
+
+    def test_box_geometry_is_marked_as_approximation_without_fake_masks(self):
+        from src.team_identification.supervised_uniforms import SupervisedUniforms
+        model=SupervisedUniforms(dict(version='user-supervised-torso-nearest-v1',status='frozen',
+            max_distance=.35,min_margin=.1,examples=[dict(label=label,example_id=label,
+            descriptor=[.005]*200) for label in ('Barcelona','Athletic')]))
+        pipeline=IdentityPipeline(metadata(5),model,identity_method='image-overlap')
+        h=np.array([[105.3,0.,27.],[0.,68.,49.],[0.,0.,1.]])
+        row=pipeline.step_boxes(envelope(0),Image.new('RGB',(150,150),'red'),[[40,20,55,70]],
+            dict(valid=True,matrix=h,reprojection_error=1.))
+        detection=row['detections'][0]
+        self.assertEqual(detection['feet_method'],'estimated_box_bottom')
+        self.assertEqual(detection['geometry_confidence'],'uncalibrated_box_approximation')
+        self.assertNotIn('mask',detection)
+        self.assertEqual(row['players'][0]['geometry_method'],'automatic_box_bottom_and_homography')
+        with self.assertRaises(ValueError):
+            pipeline.step_boxes(envelope(1),Image.new('RGB',(150,150)),[[float('nan'),0,5,5]],dict(valid=False))
+
+    def test_image_continuity_does_not_turn_invalid_geometry_into_a_player(self):
+        pipeline=IdentityPipeline(metadata(5),self.Classifier(),identity_method='image-overlap')
+        mask=np.zeros((150,150),bool);mask[20:70,40:55]=True
+        image=Image.new('RGB',(150,150))
+        first=pipeline.step(envelope(0),image,[mask],dict(valid=False))
+        second=pipeline.step(envelope(1),image,[mask],dict(valid=False))
+        self.assertEqual(first['players'],[])
+        self.assertEqual(second['players'],[])
+        self.assertEqual(first['detections'][0]['identity'],second['detections'][0]['identity'])
+        self.assertFalse(second['detections'][0]['geometry_valid'])
 
     def test_mask_to_team_to_corrected_model(self):
         meta=metadata(10)

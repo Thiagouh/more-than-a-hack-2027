@@ -1,10 +1,25 @@
 """Quality gates must remain identical when computations use tight person boxes."""
 import unittest
 import numpy as np
-from src.team_identification.pilot import torso_evidence,mask_flags,binary_mask
+from src.team_identification.pilot import torso_evidence,mask_flags,binary_mask,mask_bounds
 
 
 class SpatialOptimizationTests(unittest.TestCase):
+    def test_bounds_match_coordinate_reference_with_edges_and_empty_masks(self):
+        rng=np.random.default_rng(23)
+        for index in range(50):
+            mask=rng.random((51,83)) > (.99 if index%2 else .4)
+            if index==0:mask[:]=False
+            ys,xs=np.where(mask)
+            expected=(int(xs.min()),int(ys.min()),int(xs.max()+1),int(ys.max()+1)) if len(xs) else None
+            self.assertEqual(mask_bounds(mask),expected)
+            if len(xs):
+                x,y,X,Y=expected
+                cy,cx=np.where(mask[y:Y,x:X]);cy+=y;cx+=x
+                a=ys>=np.quantile(ys,.95);b=cy>=np.quantile(cy,.95)
+                self.assertEqual((float(np.median(xs[a])),float(ys.max())),
+                                 (float(np.median(cx[b])),float(cy.max())))
+
     def test_torso_is_invariant_to_empty_padding_and_returns_full_size_mask(self):
         rng=np.random.default_rng(17)
         for index in range(20):

@@ -9,6 +9,7 @@ from pathlib import Path
 import subprocess
 from datetime import datetime, timezone
 import copy
+import time
 import numpy as np
 from PIL import Image
 from src.ball_events.inputs import atd
@@ -60,7 +61,7 @@ def run(args):
     pipeline_meta=copy.deepcopy(meta)
     period_resets=[r['frame'] for r in kickoffs if r.get('half',1)>1]
     pipeline_meta['continuity_starts']=sorted(set(meta.get('continuity_starts',[]))|set(period_resets))
-    pipeline = IdentityPipeline(pipeline_meta, classifier, config, uniform_policy=getattr(args,'uniform_policy',SPACED_POLICY))
+    pipeline = IdentityPipeline(pipeline_meta, classifier, config, uniform_policy=getattr(args,'uniform_policy',SPACED_POLICY), identity_method=getattr(args,'identity_method','pitch'))
     args.out.mkdir(parents=True, exist_ok=False)
     package = dict(schema=SCHEMA, timeline=meta['timeline'], fps=meta['fps'], n_frames=meta['n_frames'],
         status='started', validation='not_evaluated', inference_mode='full_frame', start_frame=args.start_frame,
@@ -69,11 +70,24 @@ def run(args):
         atd_raw_sha256=sha256(files['atd_raw']), atd_meta_sha256=sha256(files['atd_meta']), homography_sha256=sha256(hpath),
         **uniform_binding,
         observations='observations.jsonl', configuration=pipeline.config, parameters_calibrated=False,
+        identity_method=pipeline.identity_method,
         period_reset_frames=period_resets,
         evidence_latency='offline replay; model runtime not measured',
         code_sha256={p.name: sha256(p) for p in (Path(__file__), *sorted(Path('src/team_identification').glob('*.py')))})
     write_json(args.out/'overlay.json', package)
-    sam = Sam3(args.checkpoint, args.checkpoint_sha256, device=args.device)
+    backend = getattr(args, 'backend', 'sam3')
+    if backend in ('yolo','yolo-boxes'):
+        if not model_path:
+            raise ValueError('YOLO requires the frozen supervised uniform model')
+        from src.team_identification.yolo import YoloPeople, YoloBoxes
+        adapter=YoloBoxes if backend=='yolo-boxes' else YoloPeople
+        sam = adapter(args.checkpoint, device=args.device, imgsz=args.imgsz, confidence=args.confidence)
+    else:
+        sam = Sam3(args.checkpoint, args.checkpoint_sha256, device=args.device)
+    package.update(vision_backend=backend, vision_environment=sam.environment)
+    write_json(args.out/'overlay.json', package)
+    started = time.perf_counter()
+    timings = []
     # Exact decode counter, bounded to the requested interval; no timestamp seek.
     select = f'between(n\\,{args.start_frame}\\,{args.end_frame-1})'
     command = ['ffmpeg', '-hide_banner', '-loglevel', 'error', '-i', str(video), '-vf', 'select='+select,
@@ -89,12 +103,20 @@ def run(args):
                     if len(payload) != size:
                         raise ValueError('Incomplete video decode')
                     image = Image.frombytes('RGB', (info['width'], info['height']), payload)
-                    masks, _ = sam.segment(image)
-                    row = pipeline.step(envelope, image, masks, hs[envelope['frame']])
+                    frame_started = time.perf_counter()
+                    if backend=='yolo-boxes':
+                        boxes,vision=sam.detect(image);masks=[]
+                        row=pipeline.step_boxes(envelope,image,boxes,hs[envelope['frame']])
+                    else:
+                        masks, vision = sam.segment(image)
+                        row = pipeline.step(envelope, image, masks, hs[envelope['frame']])
+                    for detection in row['detections']:detection['vision_backend']=backend
                     mask_dir=args.out/'masks'/f"{envelope['frame']:08d}"
-                    mask_dir.mkdir(parents=True)
+                    if not getattr(args, 'no_save_masks', False):
+                        mask_dir.mkdir(parents=True)
                     for d,mask in zip(row['detections'],masks):
-                        if d['box'] is None:continue
+                        d['vision_backend'] = backend
+                        if getattr(args, 'no_save_masks', False) or d['box'] is None:continue
                         x,y,X,Y=d['box']
                         asset=mask_dir/f"{d['detection_index']:03d}.png"
                         Image.fromarray(np.asarray(mask[y:Y,x:X],dtype='uint8')*255).save(asset)
@@ -106,6 +128,9 @@ def run(args):
                         player['mask_sha256']=detection.get('mask_sha256')
                     import hashlib
                     row['image_rgb_sha256'] = hashlib.sha256(payload).hexdigest()
+                    row['vision'] = vision if backend in ('yolo','yolo-boxes') else {'backend': backend}
+                    row['processing_s'] = time.perf_counter()-frame_started
+                    timings.append(row['processing_s'])
                     journal.write(json.dumps(row, allow_nan=False)+'\n')
                     if envelope['frame'] % 25 == 0:
                         journal.flush()
@@ -118,7 +143,10 @@ def run(args):
                 proc.terminate()
                 proc.wait()
     package.update(status='complete', completed_at_utc=datetime.now(timezone.utc).isoformat(),
-                   observations_sha256=sha256(args.out/'observations.jsonl'), sam_environment=sam.environment)
+                   observations_sha256=sha256(args.out/'observations.jsonl'),
+                   vision_environment=sam.environment,
+                   benchmark=dict(elapsed_s=time.perf_counter()-started, frames=len(timings),
+                       processing_mean_s=float(np.mean(timings)), processing_p95_s=float(np.percentile(timings,95))))
     write_json(args.out/'overlay.json', package)
     return package
 
@@ -130,8 +158,13 @@ def main():
     uniforms.add_argument('--references', type=Path)
     uniforms.add_argument('--supervised-model',type=Path,help='Frozen supervised crop model; interpret four samples over 0.6 seconds per local identity')
     p.add_argument('--uniform-policy',choices=[SPACED_POLICY,LEGACY_POLICY],default=SPACED_POLICY,help='Default: offsets -15,-10,-5,0; legacy consecutive policy remains available')
+    p.add_argument('--identity-method',choices=['pitch','image-overlap'],default='pitch')
+    p.add_argument('--backend', choices=['sam3','yolo','yolo-boxes'], default='sam3')
+    p.add_argument('--imgsz', type=int, default=960)
+    p.add_argument('--confidence', type=float, default=.25)
+    p.add_argument('--no-save-masks', action='store_true', help='Keep observations without per-person PNGs')
     p.add_argument('--checkpoint', type=Path, required=True)
-    p.add_argument('--checkpoint-sha256', required=True)
+    p.add_argument('--checkpoint-sha256', help='Required for SAM; YOLO records the resolved weights hash')
     p.add_argument('--device', choices=['cpu', 'mps', 'cuda'], default='cpu')
     p.add_argument('--start-frame', type=int, default=11160, help='Includes 25-frame warmup before the public comparison')
     p.add_argument('--end-frame', type=int, default=14185)

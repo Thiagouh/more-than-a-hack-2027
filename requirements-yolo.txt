@@ -1,0 +1,6 @@
+# Python 3.12; independently installable without the SAM checkout.
+ultralytics==8.4.215
+torch==2.10.0
+torchvision==0.25.0
+numpy==1.26.4
+pillow==13.0.0

@@ -57,6 +57,15 @@ def reviewed_box_quality(mask, box):
         'mask_escapes_reviewed_box' if fraction > .1 else None)
 
 
+def mask_bounds(mask):
+    """Tight bounds without allocating coordinates for every foreground pixel."""
+    rows = np.flatnonzero(mask.any(axis=1))
+    if not len(rows):
+        return None
+    cols = np.flatnonzero(mask.any(axis=0))
+    return int(cols[0]), int(rows[0]), int(cols[-1]+1), int(rows[-1]+1)
+
+
 def torso_evidence(image, mask, excluded=None, *, return_mask=False):
     image = np.asarray(image)
     if (image.ndim != 3 or image.shape[2] != 3 or image.dtype.kind not in 'uif'
@@ -68,10 +77,10 @@ def torso_evidence(image, mask, excluded=None, *, return_mask=False):
                    boundary_torso_pixels=0, core_radius=0,
                    removed_torso_pixels=0, valid_torso_fraction=0.,
                    overlap_pixels=int((mask & excluded).sum()))
-    ys, xs = np.where(mask)
-    if len(xs) == 0:
+    bounds = mask_bounds(mask)
+    if bounds is None:
         return None, quality, 'empty_mask'
-    x0,x1,y0,y1 = xs.min(),xs.max()+1,ys.min(),ys.max()+1
+    x0,y0,x1,y1 = bounds
     h,w = y1-y0,x1-x0
     if h < 20 or w < 10:
         return None, quality, 'small_mask'
@@ -114,8 +123,7 @@ def mask_flags(masks):
     areas = [int(m.sum()) for m in masks]
     bounds=[]
     for mask in masks:
-        ys,xs=np.nonzero(mask)
-        bounds.append((int(xs.min()),int(ys.min()),int(xs.max()+1),int(ys.max()+1)) if len(xs) else None)
+        bounds.append(mask_bounds(mask))
     for i in range(len(masks)):
         for j in range(i):
             if bounds[i] is None or bounds[j] is None:continue
