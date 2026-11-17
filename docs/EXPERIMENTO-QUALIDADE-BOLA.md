@@ -80,3 +80,35 @@ O rótulo externo não é fornecido ao filtro. Registrar cobertura, erros aceito
 quais falhas ficaram sem solução. O caso de quatro segundos testa expressamente
 um limite que a v2 não pretende resolver. Nenhuma corrupção é aplicada ao jogo
 da competição nem usada para criar suas previsões.
+
+## Resultado e decisão de integração
+
+Nos arquivos externos originais, a filtragem não alterou os candidatos. No teste
+controlado de 60 trechos corrompidos, os erros aceitos caíram de 8.296 para 7.788;
+os acertos aceitos caíram de 45.704 para 45.612. A cobertura passou de 57,10% para
+56,46% dos 94.577 frames com equipe declarada. Não são frames independentes:
+existem três jogos e 60 falhas artificiais. Os rótulos são automáticos do fornecedor.
+
+Foram retiradas 492 das 525 observações corrompidas em falhas de até dois segundos.
+Falhas de quatro segundos permaneceram majoritariamente sem solução. Isso mede
+robustez a uma corrupção específica, não acurácia de posse do desafio.
+
+Decisão de engenharia, anterior à nova checagem pública: integrar a opção física
+com seus limites fixos e manter a referência sem opções disponível. A decisão
+se apoia nos contratos de observação e no teste externo, sem otimizar limiares
+pelo gabarito do jogo. O processo continua podendo retirar observações legítimas;
+não se atribui correção individual aos frames retirados.
+
+## Reprodução dos testes externos
+
+Os dados são baixados diretamente da SkillCorner, com commit fixo, verificação do
+SHA256 Git LFS e crédito/licença no manifesto. Não são necessários ao gerador do
+CSV da competição e não são redistribuídos neste repositório.
+
+```sh
+python -m scripts.download_ball_quality_external --out-dir outputs/skillcorner-quality
+python -m scripts.evaluate_ball_quality_external \
+  --data outputs/skillcorner-quality --out outputs/external-clean.json
+python -m scripts.evaluate_ball_quality_external --fault-injection \
+  --data outputs/skillcorner-quality --out outputs/external-faults.json
+```

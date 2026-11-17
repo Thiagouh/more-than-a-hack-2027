@@ -7,6 +7,8 @@ import hashlib
 import json
 from pathlib import Path
 import platform
+import subprocess
+import sys
 import time
 import numpy as np
 import pandas as pd
@@ -25,15 +27,23 @@ def main():
     parser.add_argument('--data-dir',type=Path,default=Path('data'))
     parser.add_argument('--out-dir',type=Path,required=True)
     parser.add_argument('--ball-quality',action='store_true',help='Explicit physics-only filtering experiment; no learned model')
+    control=parser.add_mutually_exclusive_group()
+    control.add_argument('--control-events',type=Path,help='Hash-bound raw-ATD Frente 5 bundle')
+    control.add_argument('--include-control-events',action='store_true',help='Regenerate and bind automatic Frente 5 events')
     args=parser.parse_args()
     if args.out_dir.exists():raise ValueError('Use a new output directory')
     inputs=require(['atd_meta','atd_raw','smart_tagging'],GAME,args.data_dir)
     config=Path('configs/frente4_v1.json')
     code=[Path(__file__),Path('games.py'),Path('starter/load_smart_tagging.py'),
           *sorted(Path('src/frente4').glob('*.py'))]
+    if args.control_events or args.include_control_events:
+        code.extend([Path('configs/frente5_v1.json'),Path('starter/load_atd.py'),*sorted(Path('src/ball_events').glob('*.py'))])
     source_hashes={str(p):sha(p) for p in [*map(Path,inputs),config,*code]}
-    provenance=dict(status='started',method='frente4-physics-quality-v2' if args.ball_quality else 'frente4-frozen-offline-rules',
+    method='frente4-physics-quality-v2' if args.ball_quality else 'frente4-frozen-offline-rules'
+    if args.control_events or args.include_control_events:method+='-supported-events-v1'
+    provenance=dict(status='started',method=method,
         ball_quality_enabled=args.ball_quality,
+        control_events_enabled=bool(args.control_events or args.include_control_events),
         team='La MasIA',upstream_commit='288d5a0a1aa37324850436188655ce777263b056',
         upstream_pr='https://github.com/Thiagouh/more-than-a-hack-2027/pull/1',
         ground_truth_used=False,training_on_provided_game=False,human_corrections=False,
@@ -43,9 +53,29 @@ def main():
     manifest=args.out_dir/'provenance.json'
     manifest.write_text(json.dumps(provenance,ensure_ascii=False,indent=2)+'\n')
     started=time.perf_counter()
+    event_bundle=args.control_events
+    if args.include_control_events:
+        event_bundle=args.out_dir/'automatic-control-events'
+        subprocess.run([sys.executable,'-m','src.ball_events','detect','--source','atd',
+            '--data-dir',str(args.data_dir),'--config','configs/frente5_v1.json',
+            '--hypothesis','Automatic control evidence with source-bound support; no visual corrections or references.',
+            '--out',str(event_bundle)],check=True)
+    events_path=None
+    if event_bundle:
+        from src.ball_events.inputs import atd
+        from src.ball_events.contract import config as detector_config
+        from src.frente4.event_support import load_automatic_bundle
+        meta,_,_,event_inputs,_=atd(args.data_dir)
+        expected={key:sha(path) for key,path in event_inputs.items()}
+        expected_configuration=detector_config(json.loads(Path('configs/frente5_v1.json').read_text()),meta['fps'])
+        _,binding=load_automatic_bundle(event_bundle,meta,expected,expected_configuration)
+        events_path=event_bundle/'events.jsonl'
+        provenance['automatic_control_binding']=binding
+        source_hashes.update({str(p):sha(p) for p in [events_path,event_bundle/'manifest.json']})
+        manifest.write_text(json.dumps(provenance,ensure_ascii=False,indent=2)+'\n')
     temporary=args.out_dir/'prediction.partial.csv'
-    _,diagnostic=run(str(temporary),str(args.data_dir),str(config),
-                     cache_dir=str(args.out_dir/'cache'),ball_quality=args.ball_quality)
+    _,diagnostic=run(str(temporary),str(args.data_dir),str(config),events_path=str(events_path) if events_path else None,
+                     cache_dir=str(args.out_dir/'cache'),ball_quality=args.ball_quality,event_support_only=events_path is not None)
     reason=pm.validate_submission(pm.read_label_csv(temporary),GAMES[GAME]['n_video_frames'])
     if reason:raise ValueError(reason)
     if any(sha(p)!=digest for p,digest in source_hashes.items()):

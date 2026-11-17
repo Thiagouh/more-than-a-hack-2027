@@ -83,7 +83,7 @@ def candidates(feat, cfg):
     return cand
 
 
-def build_labels(tr, tags=(), cfg=None, events=None, game=GAME, ball_quality=False):
+def build_labels(tr, tags=(), cfg=None, events=None, game=GAME, ball_quality=False,event_support_only=False):
     cfg = cfg or {}
     lost_outside=None;quality=None
     if ball_quality:
@@ -95,9 +95,15 @@ def build_labels(tr, tags=(), cfg=None, events=None, game=GAME, ball_quality=Fal
     dead = deadball.dead_ball_evidence(feat, blocks, KICKOFFS, GAMES[game]["pitch"], tags,
                                        {k: v for k, v in cfg.items() if k in deadball.DEFAULTS},lost_outside_starts=lost_outside)
     event_team = None
+    event_audit=None
     if events:
-        event_team = events_to_team_array(events, tr["n_frames"], cfg.get("event_hold_frames", 12),
-                                          cfg.get("event_min_strength", "medium"))
+        if event_support_only:
+            from .event_support import supported_event_teams
+            event_team,event_audit=supported_event_teams(events,tr['n_frames'],
+                ball_valid=np.isfinite(tr['ball_xy']).all(axis=1),min_strength=cfg.get('event_min_strength','medium'))
+        else:
+            event_team = events_to_team_array(events, tr["n_frames"], cfg.get("event_hold_frames", 12),
+                                              cfg.get("event_min_strength", "medium"))
     codes = possession_labels(candidates(feat, cfg), dead["dead"], blocks, Params.from_dict(cfg),
                               hint_team=dead["hint_team"], event_team=event_team)
     diag = dict(summary=summarize(codes, blocks, tr["fps"]),
@@ -108,10 +114,11 @@ def build_labels(tr, tags=(), cfg=None, events=None, game=GAME, ball_quality=Fal
                 candidate_fraction=float(np.mean(candidates(feat, cfg) >= 0)),
                 params=Params.from_dict(cfg).to_dict(), dead_config=dead["config"])
     if quality is not None:diag['ball_quality']=quality
+    if event_audit is not None:diag['control_events']=event_audit
     return codes_to_labels(codes), diag
 
 
-def run(out, data_dir=None, config_path=None, events_path=None, cache_dir=None, game=GAME, ball_quality=False):
+def run(out, data_dir=None, config_path=None, events_path=None, cache_dir=None, game=GAME, ball_quality=False,event_support_only=False):
     from .atd import load_tracking
     from starter.load_smart_tagging import load as load_tags
 
@@ -119,7 +126,7 @@ def run(out, data_dir=None, config_path=None, events_path=None, cache_dir=None, 
     tr = load_tracking(data_dir, cache_dir, game)
     tags = load_tags(game, data_dir) if cfg.get("use_set_piece_tags", True) else []
     events = read_events_jsonl(events_path) if events_path else None
-    labels, diag = build_labels(tr, tags, cfg, events, game,ball_quality=ball_quality)
+    labels, diag = build_labels(tr, tags, cfg, events, game,ball_quality=ball_quality,event_support_only=event_support_only)
     path = write_submission(out, labels)
     diag.update(teams=dict(H=tr["teams"][0], A=tr["teams"][1]), cache=tr["cache_path"],
                 config=config_path or DEFAULT_CONFIG, events=events_path)
