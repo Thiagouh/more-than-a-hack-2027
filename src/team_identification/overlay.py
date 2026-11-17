@@ -9,6 +9,36 @@ from .pilot import sha256
 SCHEMA = 'tactical-team-identity-v1'
 
 
+def apply_team_corrections(envelope, observation, pitch):
+    """Explicit ATD-prior experiment: change only matched accepted team labels.
+
+    Uncorrected ATD observations retain their original, unverified metadata.
+    They are never presented as visually identified people. No visual positions
+    or recovered people enter this policy, and no correction persists to a later
+    frame without that frame's accepted evidence.
+    """
+    if observation is None:
+        return envelope
+    _, display = apply_overlay(envelope, observation, pitch)
+    corrected = copy.deepcopy(envelope)
+    accepted = {p['original_track_id']: p for p in display
+                if p['original_track_id'] is not None and p['team'] in ('H', 'A')
+                and p['identity_status'] == 'matched'}
+    for point in corrected['players']:
+        visual = accepted.get(point['track_id'])
+        before = point['team']
+        original_track_id = point['track_id']
+        if visual:
+            point['team'] = visual['team']
+            if visual['team'] != before:
+                point['track_id'] = f"team-corrected:{original_track_id}:{visual['team']}"
+        point.setdefault('extensions', {})['team_source'] = dict(
+            method='accepted_visual_correction' if visual else 'provided_atd_metadata_unverified',
+            original_team=before, original_track_id=original_track_id,
+            visual_identity=visual['track_id'] if visual else None)
+    return corrected
+
+
 def load_overlay(path, meta, video, atd_raw, homography):
     path = Path(path)
     package = json.loads(path.read_text())

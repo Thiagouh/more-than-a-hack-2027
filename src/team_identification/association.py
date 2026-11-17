@@ -103,6 +103,51 @@ def associate(people_xy, points_xy, max_distance_m=1.5, min_margin_m=.25):
     return rows
 
 
+class ImageIdentities:
+    """Conservative consecutive-frame box overlap, independent of noisy feet.
+
+    No prediction-only continuity or re-identification through gaps. Ambiguous
+    global assignments retire the old identity instead of selecting by color.
+    """
+    def __init__(self, min_iou=.3, min_margin=.1):
+        self.min_iou, self.min_margin = min_iou, min_margin
+        self.tracks = {}; self.serial = 0; self.last_frame = -1
+
+    def step(self, frame, boxes, reset=False):
+        if type(frame) is not int or frame <= self.last_frame:
+            raise ValueError('Identity frames must strictly increase')
+        if reset or frame != self.last_frame+1:
+            self.tracks.clear()
+        self.last_frame = frame
+        keys = sorted(self.tracks); n, m = len(boxes), len(self.tracks)
+        penalty = float(n+1)
+        cost = np.full((n,m+n),penalty)
+        for i,box in enumerate(boxes):
+            if box is None:continue
+            x,y,X,Y=box; area=(X-x)*(Y-y)
+            for j,key in enumerate(keys):
+                a,b,A,B=self.tracks[key]
+                inter=max(0,min(X,A)-max(x,a))*max(0,min(Y,B)-max(y,b))
+                union=area+(A-a)*(B-b)-inter
+                iou=inter/union if union else 0
+                if iou>=self.min_iou:cost[i,j]=1-iou
+        chosen,total=_assignment(cost) if n else ([],0)
+        result=[]; next_tracks={}
+        for i,(box,j) in enumerate(zip(boxes,chosen)):
+            if box is None:
+                result.append(None);continue
+            key=None
+            if j<m and cost[i,j]<penalty:
+                alternative=cost.copy();alternative[i,j]=penalty*4
+                _,other=_assignment(alternative)
+                if other-total>=self.min_margin:key=keys[j]
+            if key is None:
+                self.serial+=1;key=f'image-person-{self.serial:06d}'
+            next_tracks[key]=list(box);result.append(key)
+        self.tracks=next_tracks
+        return result
+
+
 class LocalIdentities:
     """Causal motion association; slots are not identities. Ambiguity retires IDs."""
     def __init__(self, fps=25, max_gap_frames=25, max_speed_mps=10., margin_m=.25):

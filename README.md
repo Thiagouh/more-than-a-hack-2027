@@ -5,6 +5,29 @@ reconstruct ball possession throughout a match. Built around the
 [More than a Hack 2027 challenge](https://github.com/metrica-sports/more-than-a-hack-2027),
 this repository contains our implementation, experiments, and findings for review.
 
+## Entrega La MasIA
+
+A entrega integra a Frente 4 de Vitor Rocha: tracking ATD, Smart Tagging, regras
+automáticas de bola morta e máquina de estados de posse. Não usa treinamento no
+jogo fornecido, correções humanas ou modelo supervisionado de uniformes. Método, resultados e limites estão no
+[documento técnico](docs/LA-MASIA-TECNICO.md).
+
+```sh
+python3 -m venv .venv
+.venv/bin/python -m pip install -r requirements-lock.txt
+.venv/bin/python -m scripts.build_team_submission --out-dir outputs/la-masia-reproduction
+.venv/bin/python evaluation/validate_submission.py "outputs/la-masia-reproduction/La MasIA.csv"
+```
+
+O diretório de saída deve ser novo. O pacote autorizado da partida deve estar em
+`data/`; ele não é redistribuído. O arquivo final já é gerado com o nome `La MasIA.csv`.
+
+**Os experimentos históricos com uniformes rotulados neste jogo e evidências
+visuais revisadas por pessoa não integram a submissão.** As
+[regras oficiais atualizadas](docs/RULES.md) proíbem rótulos humanos deste jogo
+inclusive para treino e validação. O [piloto YOLO](docs/YOLO-PILOTO.md) fica
+registrado como pesquisa excluída da entrega atual.
+
 ## Material para revisão dos mentores
 
 Dois documentos em português consolidam o estado atual do código e os pontos que
@@ -15,9 +38,9 @@ gostaríamos de discutir:
 - [Desafios e pontos de definição](docs/DESAFIOS-E-PONTOS-DE-DEFINICAO.md): desempenho para
   90 minutos, identidade, detector leve, SAM seletivo e protocolo de validação.
 
-O detector leve com SAM seletivo ainda é uma proposta. A nova acurácia de posse
-com a identificação visual atual permanece pendente; os documentos distinguem
-esse resultado da avaliação de uniformes e das medições anteriores de posse.
+Os documentos de mentores preservam o retrato de 16/11/2026. A entrega atual
+e o piloto YOLO de 17/11 estão nos documentos vinculados acima. SAM seletivo
+permanece uma proposta; os experimentos supervisionados não integram a submissão.
 
 ## What we aim to build
 

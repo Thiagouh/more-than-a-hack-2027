@@ -96,7 +96,7 @@ def prepare(model_path, extraction, proposals, out):
             group_id=f'tactical-round11-{end}',challenge=case.get('challenge','unreviewed'),frames=frames,
             identity_review=str(review.relative_to(out)),identity_review_sha256=sha256(review)))
     # Four representative timestamps; detailed sheets retain every frame.
-    sheets=[];font=ImageFont.truetype('/System/Library/Fonts/Supplemental/Arial Bold.ttf',25)
+    sheets=[];font=(ImageFont.truetype('/System/Library/Fonts/Supplemental/Arial Bold.ttf',25) if Path('/System/Library/Fonts/Supplemental/Arial Bold.ttf').exists() else ImageFont.load_default(size=25))
     for page in range(math.ceil(len(rows)/16)):
         sheet=Image.new('RGB',(1600,4*270),'#eef1f4');draw=ImageDraw.Draw(sheet)
         for i,case in enumerate(rows[page*16:(page+1)*16]):
@@ -150,7 +150,7 @@ def review_batch(batch_path, review_path, out):
             else:draw.text((x+5,y+60),'Indisponivel',fill='#666666')
         path=out/'identity-review'/f"{case['id']}.png";strip.save(path)
         case['identity_review']=str(path.relative_to(out));case['identity_review_sha256']=sha256(path)
-    sheets=[];font=ImageFont.truetype('/System/Library/Fonts/Supplemental/Arial Bold.ttf',25)
+    sheets=[];font=(ImageFont.truetype('/System/Library/Fonts/Supplemental/Arial Bold.ttf',25) if Path('/System/Library/Fonts/Supplemental/Arial Bold.ttf').exists() else ImageFont.load_default(size=25))
     for page in range(math.ceil(len(batch['sequences'])/16)):
         sheet=Image.new('RGB',(1600,1080),'#eef1f4');draw=ImageDraw.Draw(sheet)
         for i,case in enumerate(batch['sequences'][page*16:(page+1)*16]):

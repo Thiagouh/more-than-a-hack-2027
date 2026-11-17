@@ -51,6 +51,7 @@ def main():
     parser.add_argument('--recovered-observations',type=Path)
     parser.add_argument('--tracking-review',type=Path)
     parser.add_argument('--team-identity',type=Path,help='Frozen-reference visual team overlay; replaces legacy tracking review/recoveries')
+    parser.add_argument('--identity-policy',choices=['strict','correct-teams'],default='strict',help='Explicit experiment: preserve raw ATD except accepted matched team corrections')
     args=parser.parse_args()
     previous_protocol=json.loads((args.baseline/'protocol.json').read_text())
     start,end=previous_protocol['start_frame'],previous_protocol['end_frame_exclusive']
@@ -132,15 +133,16 @@ def main():
         synthetic_references=[{k:v for k,v in case.items() if k!='frames'} for case in examples],
         provenance=provenance,metrics_version=METRICS_VERSION,policy_version=POLICY_VERSION,
         hypothesis='Preserve a known team through plausible observed passes; predicted interception does not confirm turnover.',
-        integration_status=dict(team_source='visual identity overlay' if team_identity is not None else 'ATD metadata',sam3_executed=bool(args.visual_observations) or team_identity is not None,
-            team_identity_applied=team_identity is not None,team_identity_package=identity_package,
+        integration_status=dict(team_source='visual identity overlay' if team_identity is not None else 'ATD metadata',sam3_executed=bool(args.visual_observations) or (team_identity is not None and identity_package.get('vision_backend','sam3')=='sam3'),
+            vision_backend=identity_package.get('vision_backend','sam3') if identity_package else None,
+            team_identity_applied=team_identity is not None,identity_policy=args.identity_policy,team_identity_package=identity_package,
             goalkeeper_context_applied=any(r['classification_method']=='sam3_goalkeeper_context' for rows in visual_rows.values() for r in rows),
             visual_reference_bundle_frozen=team_identity is not None,visual_observation_frames=len(visual_rows),
             game_evidence_frames=len(evidence_rows),recovery_frames=len(recovered_rows),tracking_quality_review_applied=tracking_review is not None,
             temporal_context_frames=cfg['context_frames'],
             evidence_latency='offline reviewed; declared frame availability is not measured live latency',
             visual_control_evidence_modes=sorted({r['control_evidence'] for rows in visual_rows.values() for r in rows}),
-            note='Only same-source frame-bound SAM observations can influence possession; missing visual inputs are not synthesized.'),
+            note='Only same-source frame-bound visual observations can influence possession; missing visual inputs are not synthesized.'),
         scope='Same public 120-second window, causal tracking prefix; not full-match accuracy validation.')
     write_json(args.out/'protocol.json',protocol)
     write_json(args.out/'metric-catalog.json',dict(version=METRICS_VERSION,units=UNITS))
@@ -149,7 +151,7 @@ def main():
     for name,overrides in variants:
         synthetic[name]={case['name']:synthetic_case(case,overrides) for case in examples}
     write_json(args.out/'synthetic.json',synthetic)
-    model=CollectiveModel(meta,detector_cfg,cfg,hints,kickoffs=kickoffs,tracking_review=tracking_review,team_identity=team_identity)
+    model=CollectiveModel(meta,detector_cfg,cfg,hints,kickoffs=kickoffs,tracking_review=tracking_review,team_identity=team_identity if args.identity_policy=='strict' else None)
     raw_detector=Detector(meta,detector_cfg,hints) if tracking_review is not None or team_identity is not None else None
     raw_events=[]
     labels=[];states=[];events=[];visible=[]
@@ -157,7 +159,11 @@ def main():
     with (args.out/'measurements.jsonl').open('w') as journal:
         for row in islice(factory(),end):
             if raw_detector is not None:raw_events.extend(raw_detector.feed(row)[1])
-            snapshot,_,batch,measurement=model.feed(row,visual_rows.get(row['frame'],[]),
+            inference_row=row
+            if team_identity is not None and args.identity_policy=='correct-teams':
+                from src.team_identification.overlay import apply_team_corrections
+                inference_row=apply_team_corrections(row,team_identity.get(row['frame']),meta['pitch_m'])
+            snapshot,_,batch,measurement=model.feed(inference_row,visual_rows.get(row['frame'],[]),
                 game_evidence=evidence_rows.get(row['frame'],[]),recovered_observations=recovered_rows.get(row['frame'],[]))
             labels.append(snapshot['label']);events.extend(batch)
             visible.append(row['ball']['source']=='observed')
