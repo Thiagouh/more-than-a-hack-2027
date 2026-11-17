@@ -11,6 +11,34 @@ def tracking(xy,fps=25):
 
 
 class BallQualityTests(unittest.TestCase):
+    def test_short_wrong_object_excursion_is_quarantined_as_a_whole(self):
+        xy=np.array([[40+.1*i,30] for i in range(50)],dtype=np.float32)
+        xy[10:30]=[[75+.05*i,30] for i in range(20)]
+        result,_,audit=clean_ball_observations(tracking(xy))
+        self.assertTrue(np.isnan(result['ball_xy'][10:30]).all())
+        self.assertEqual(audit['removed_excursion_observations'],20)
+        self.assertGreater(audit['additional_excursion_observations'],0)
+
+    def test_single_relocation_or_nonreturning_jumps_are_not_erased_wholesale(self):
+        xy=np.array([[20+.1*i,30] for i in range(50)],dtype=np.float32)
+        xy[10:]=[[70+.1*i,30] for i in range(40)]
+        result,_,audit=clean_ball_observations(tracking(xy))
+        self.assertEqual(audit['removed_excursion_observations'],0)
+        self.assertTrue(np.isfinite(result['ball_xy'][20:]).all())
+        xy[30:]=[[100+.02*i,30] for i in range(20)]
+        _,_,audit=clean_ball_observations(tracking(xy))
+        self.assertEqual(audit['removed_excursion_observations'],0)
+
+    def test_long_or_internally_missing_excursion_is_not_quarantined(self):
+        xy=np.array([[40+.03*i,30] for i in range(100)],dtype=np.float32)
+        xy[10:80]=[75,30]
+        _,_,audit=clean_ball_observations(tracking(xy))
+        self.assertEqual(audit['removed_excursion_observations'],0)
+        xy[10:80]=np.array([[40+.03*i,30] for i in range(10,80)])
+        xy[10:30]=[75,30];xy[20]=np.nan
+        _,_,audit=clean_ball_observations(tracking(xy))
+        self.assertEqual(audit['removed_excursion_observations'],0)
+
     def test_plausible_fast_shot_is_retained_exactly(self):
         raw=tracking([[20+1.4*i,30] for i in range(8)])
         result,starts,summary=clean_ball_observations(raw)

@@ -7,7 +7,8 @@ This is offline filtering, not a claim of causal availability.
 """
 import numpy as np
 
-DEFAULTS = dict(max_speed_mps=40.0, jump_padding_frames=2, reference_fps=25.0, outside_limit_m=5.0)
+DEFAULTS = dict(max_speed_mps=40.0, jump_padding_frames=2, reference_fps=25.0,
+                outside_limit_m=5.0,max_excursion_s=2.0)
 
 
 def clean_ball_observations(tr, boundary_margin_m=.5):
@@ -26,6 +27,7 @@ def clean_ball_observations(tr, boundary_margin_m=.5):
     outside=finite&((xy[:,0]<-limit)|(xy[:,0]>pitch[0]+limit)
                     |(xy[:,1]<-limit)|(xy[:,1]>pitch[1]+limit))
     jump=np.zeros(len(xy),dtype=bool)
+    indices=np.empty(0,dtype=int);speed=np.empty(0,dtype=float)
     if len(xy)>1:
         with np.errstate(invalid='ignore',over='ignore'):
             speed=np.linalg.norm(np.diff(xy.astype(float),axis=0),axis=1)*fps
@@ -36,7 +38,23 @@ def clean_ball_observations(tr, boundary_margin_m=.5):
     for shift in range(1,padding+1):
         jump[shift:]|=original_jump[:-shift]
         jump[:-shift]|=original_jump[shift:]
-    removed=finite&(outside|jump)
+    excursion=np.zeros(len(xy),dtype=bool)
+    for left,right in zip(indices[:-1],indices[1:]):
+        # A bounded observed island, bracketed by two impossible jumps, may be
+        # another tracked object. Require stable context on both sides and a
+        # return closer to the original trajectory than either impossible jump.
+        if (left<2 or right+3>=len(xy) or (right-left)/fps>DEFAULTS['max_excursion_s']
+                or not finite[left-2:right+4].all()
+                or outside[left] or outside[right+1]
+                or not (speed[left-2:left]<=DEFAULTS['max_speed_mps']).all()
+                or not (speed[right+1:right+3]<=DEFAULTS['max_speed_mps']).all()):
+            continue
+        direct=float(np.linalg.norm(xy[right+1]-xy[left]))
+        outbound=float(np.linalg.norm(xy[left+1]-xy[left]))
+        inbound=float(np.linalg.norm(xy[right+1]-xy[right]))
+        if direct<min(outbound,inbound) and direct*fps/(right+1-left)<=DEFAULTS['max_speed_mps']:
+            excursion[left+1:right+1]=True
+    removed=finite&(outside|jump|excursion)
     cleaned=xy.copy() if xy.dtype.kind=='f' else xy.astype(float)
     cleaned[~finite|removed]=np.nan
     kept=np.isfinite(cleaned).all(axis=1)
@@ -47,12 +65,14 @@ def clean_ball_observations(tr, boundary_margin_m=.5):
     starts=np.zeros(len(xy),dtype=bool)
     if len(xy)>1:starts[1:]=~kept[1:]&kept[:-1]&beyond[:-1]
     output=dict(tr,ball_xy=cleaned)
-    summary=dict(method='physics-only-ball-quality-v1',parameters=dict(DEFAULTS),
+    summary=dict(method='physics-only-ball-quality-v2',parameters=dict(DEFAULTS),
         effective_jump_padding_frames=padding,
         boundary_margin_m=float(boundary_margin_m),
         original_finite_observations=int(finite.sum()),kept_observations=int(kept.sum()),
         removed_observations=int(removed.sum()),partial_coordinate_frames=int(partial.sum()),
         removed_jump_observations=int((finite&jump).sum()),
+        removed_excursion_observations=int((finite&excursion).sum()),
+        additional_excursion_observations=int((finite&excursion&~jump&~outside).sum()),
         removed_extreme_outside_observations=int(outside.sum()),
         lost_outside_starts=int(starts.sum()),interpolated_observations=0,
         fitted_on_match=False,availability='offline; adjacent frames can invalidate earlier observations')

@@ -58,3 +58,25 @@ rótulos como se fossem verdade conhecida. Não treinar nem ajustar limiares nes
 verificação. O teste externo é separado das contagens automáticas do jogo alvo.
 
 Fonte: [SkillCorner Open Data](https://github.com/SkillCorner/opendata).
+
+## Extensão v2 e teste de robustez externo
+
+A verificação externa inicial não alterou nenhum candidato: os três arquivos
+tinham apenas duas observações rejeitadas. Isso não demonstrou ganho de posse.
+
+A v2 acrescenta uma hipótese fixada antes do teste de corrupção: remover um trecho
+observado de até dois segundos quando ele for delimitado por dois saltos acima de
+40 m/s, houver duas transições fisicamente válidas antes e depois, e o trajeto entre
+as duas âncoras for plausível e menor que ambos os saltos. Isso trata o caso em que
+o tracker fica brevemente em outro objeto. Não remove uma mudança isolada sem
+retorno, um trecho maior que dois segundos ou um trecho com lacuna interna.
+
+Teste predefinido nos mesmos três jogos externos, semente 20261117: até 20 trechos
+por jogo, alternando durações de 0,5, 1, 2 e 4 segundos. Nos trechos com equipe
+declarada constante pelo fornecedor, substituir a bola pela trajetória de um
+adversário fornecida pelo tracking; exigir saltos das pontas de pelo menos duas
+vezes o limite físico por frame e separar as injeções por cinco segundos.
+O rótulo externo não é fornecido ao filtro. Registrar cobertura, erros aceitos e
+quais falhas ficaram sem solução. O caso de quatro segundos testa expressamente
+um limite que a v2 não pretende resolver. Nenhuma corrupção é aplicada ao jogo
+da competição nem usada para criar suas previsões.

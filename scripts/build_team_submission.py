@@ -32,7 +32,7 @@ def main():
     code=[Path(__file__),Path('games.py'),Path('starter/load_smart_tagging.py'),
           *sorted(Path('src/frente4').glob('*.py'))]
     source_hashes={str(p):sha(p) for p in [*map(Path,inputs),config,*code]}
-    provenance=dict(status='started',method='frente4-physics-quality-v1' if args.ball_quality else 'frente4-frozen-offline-rules',
+    provenance=dict(status='started',method='frente4-physics-quality-v2' if args.ball_quality else 'frente4-frozen-offline-rules',
         ball_quality_enabled=args.ball_quality,
         team='La MasIA',upstream_commit='288d5a0a1aa37324850436188655ce777263b056',
         upstream_pr='https://github.com/Thiagouh/more-than-a-hack-2027/pull/1',
