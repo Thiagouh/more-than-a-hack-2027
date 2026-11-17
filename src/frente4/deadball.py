@@ -20,9 +20,9 @@ import numpy as np
 
 from .fsm import runs, NOBODY, H, A
 
-REASON_NONE, REASON_PRE_KICKOFF, REASON_BALL_OUT, REASON_SET_PIECE, REASON_STILL = 0, 1, 2, 3, 4
+REASON_NONE, REASON_PRE_KICKOFF, REASON_BALL_OUT, REASON_SET_PIECE, REASON_STILL, REASON_HOLE_OUT = 0, 1, 2, 3, 4, 5
 REASON_NAMES = {REASON_NONE: "alive", REASON_PRE_KICKOFF: "pre_kickoff", REASON_BALL_OUT: "ball_out",
-                REASON_SET_PIECE: "set_piece_tag", REASON_STILL: "ball_still"}
+                REASON_SET_PIECE: "set_piece_tag", REASON_STILL: "ball_still", REASON_HOLE_OUT: "ball_out_then_lost"}
 
 DEFAULTS = dict(
     out_margin_m=0.5,                 # bola além da linha por mais que isso conta como fora
@@ -77,7 +77,7 @@ def kickoff_hints(tags):
     return out
 
 
-def dead_ball_evidence(feat, blocks, kickoffs, pitch, tags=(), cfg=None):
+def dead_ball_evidence(feat, blocks, kickoffs, pitch, tags=(), cfg=None, hole_out_starts=None):
     """Devolve dict(dead bool[n], reason int8[n], hint_team int8[n], restarts list).
 
     feat      saída de features.compute_features
@@ -85,6 +85,9 @@ def dead_ball_evidence(feat, blocks, kickoffs, pitch, tags=(), cfg=None):
     kickoffs  {1: frame, 2: frame} frames publicados do pontapé inicial de cada tempo
     pitch     (comprimento, largura) em metros
     tags      lista de starter.load_smart_tagging.load (pode ser vazia)
+    hole_out_starts  bool[n] opcional (frente 2): primeiro frame de um buraco da bola que começou
+              com a bola fora das linhas. Abre D como a regra de bola fora, que não dispara
+              quando a bola some logo depois de sair.
     """
     cfg = {**DEFAULTS, **(cfg or {})}
     n = len(feat["ball_observed"])
@@ -115,6 +118,7 @@ def dead_ball_evidence(feat, blocks, kickoffs, pitch, tags=(), cfg=None):
             if stop - start >= cfg["still_frames"]:
                 still_starts[start] = True
 
+    hole_starts = np.zeros(n, dtype=bool) if hole_out_starts is None else np.asarray(hole_out_starts, dtype=bool)
     tag_starts = {}
     if cfg["use_set_piece_tags"]:
         for start, stop, kind, team in set_piece_windows(tags):
@@ -145,6 +149,8 @@ def dead_ball_evidence(feat, blocks, kickoffs, pitch, tags=(), cfg=None):
             if not is_dead:
                 if out_starts[f]:
                     is_dead, dead_start, why = True, f, REASON_BALL_OUT
+                elif hole_starts[f]:
+                    is_dead, dead_start, why = True, f, REASON_HOLE_OUT
                 elif f in tag_starts:
                     is_dead, dead_start, why = True, f, REASON_SET_PIECE
                 elif still_starts[f]:

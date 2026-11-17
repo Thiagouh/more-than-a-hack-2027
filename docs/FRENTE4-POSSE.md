@@ -122,3 +122,25 @@ são os casos das regras de bola fora/parada/set piece.
   da precisão do tracking perto das linhas. Ambas têm chave para desligar.
 - Set pieces do Smart Tagging são janelas de ~5 s em torno da reposição; se a marcação começa
   depois da reposição real, o D entra atrasado e dura pelo menos 1 s.
+
+## Integração com a frente 2 (sinal da bola)
+
+```sh
+.venv/bin/python -m src.bola.entrega                      # gera outputs/bola/sinal_bola.csv
+.venv/bin/python -m src.frente4 run --bola outputs/bola/sinal_bola.csv --out outputs/submissions/frente4_bola.csv
+```
+
+Opcional (`--bola`; sem a opção nada muda). Faz duas coisas, ambas sem gabarito:
+
+1. A posição da bola passa a ser só a `observado` do sinal, que já descartou os "deslizes" do tracker
+   (> 40 m/s). `preenchido` e `estimado` **não** entram: estimativa (erro mediano ~9 m) não é observação.
+2. Todo buraco que começou com a bola fora das linhas (`saiu_campo`) abre D (motivo `ball_out_then_lost`),
+   fechado pela reposição de sempre. A regra de bola fora exige 3 frames observados fora do campo e
+   não dispara quando o tracker perde a bola logo depois de ela sair.
+
+A posse nos buracos continua sendo mantida pela máquina de estados (equivale a `time_antes`).
+
+Verificação em 17/11/2026 (conferência de integração, não ajuste; janela pública com 17 posses):
+`validate_submission.py` aprovou os dois CSVs; spellF1 0,4571 sem e com o sinal; macroF1 0,6819 → 0,7043.
+Na partida inteira: D por `ball_out_then_lost` em 2.950 frames, observada 56,9% → 54,8%. Os quatro
+baselines refeitos saíram idênticos aos oficiais. Nenhum CSV foi submetido.

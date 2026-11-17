@@ -21,7 +21,8 @@ from . import pipeline  # noqa: E402
 
 
 def cmd_run(args):
-    path, diag = pipeline.run(args.out, args.data_dir, args.config, args.events, args.cache_dir)
+    path, diag = pipeline.run(args.out, args.data_dir, args.config, args.events, args.cache_dir,
+                              bola_path=args.bola)
     s = diag["summary"]
     print("escrito {}".format(path))
     print("times: H={} A={}".format(diag["teams"]["H"], diag["teams"]["A"]))
@@ -77,6 +78,7 @@ def main(argv=None):
     p.add_argument("--data-dir")
     p.add_argument("--config")
     p.add_argument("--events", help="events.jsonl v2 da frente 5 (opcional)")
+    p.add_argument("--bola", help="sinal_bola.csv da frente 2 (opcional); 'auto' usa outputs/bola/sinal_bola.csv")
     p.add_argument("--cache-dir")
     p.set_defaults(func=cmd_run)
 
